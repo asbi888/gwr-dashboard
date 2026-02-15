@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { DashboardDataProvider } from '@/lib/data-context';
 import AppShell from '@/components/AppShell';
 import './globals.css';
 
@@ -16,22 +17,18 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'GWaveRunner Dashboard | Marine Catering Analytics',
   description: 'Analytics dashboard for GWaveRunner Marine Catering (Mauritius)',
-  icons: {
-    icon: '/favicon.ico',
-  },
+  icons: { icon: '/favicon.ico' },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background`}
-      >
-        <AppShell>{children}</AppShell>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background`}>
+        <DashboardDataProvider>
+          <AppShell>{children}</AppShell>
+        </DashboardDataProvider>
       </body>
     </html>
   );

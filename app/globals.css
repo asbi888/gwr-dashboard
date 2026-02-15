@@ -137,6 +137,11 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   background: #CBD5E0;
 }
 
+/* Page transition */
+.page-transition {
+  animation: fadeInUp 0.3s ease-out;
+}
+
 /* Sidebar children animation */
 .sidebar-children {
   animation: sidebarExpand 0.2s ease-out;

@@ -1,13 +1,26 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 interface NavbarProps {
   onMenuToggle: () => void;
 }
 
+const PAGE_TITLES: Record<string, string> = {
+  '/': 'Overview',
+  '/revenue/trend': 'Revenue Trend',
+  '/revenue/weekly': 'Weekly Revenue',
+  '/revenue/clients': 'Revenue by Client',
+  '/revenue/menu': 'Menu Performance',
+  '/expenses/suppliers': 'Expenses by Supplier',
+  '/expenses/transactions': 'All Transactions',
+};
+
 export default function Navbar({ onMenuToggle }: NavbarProps) {
   const [searchOpen, setSearchOpen] = useState(false);
+  const pathname = usePathname();
+  const pageTitle = PAGE_TITLES[pathname] || 'Dashboard';
 
   return (
     <nav className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-gray-100">
@@ -44,7 +57,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
               <svg className="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-              <span className="text-xs font-semibold text-navy">Dashboard</span>
+              <span className="text-xs font-semibold text-navy">{pageTitle}</span>
             </div>
           </div>
 

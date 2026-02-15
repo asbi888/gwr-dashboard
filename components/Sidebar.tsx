@@ -1,18 +1,27 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+interface NavChild {
+  label: string;
+  href: string;
+}
 
 interface NavItem {
   id: string;
   label: string;
+  href?: string;
   icon: React.ReactNode;
-  children?: { id: string; label: string }[];
+  children?: NavChild[];
 }
 
 const NAV_ITEMS: NavItem[] = [
   {
     id: 'overview',
     label: 'Overview',
+    href: '/',
     icon: (
       <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -28,11 +37,10 @@ const NAV_ITEMS: NavItem[] = [
       </svg>
     ),
     children: [
-      { id: 'revenue-trend', label: 'Trend' },
-      { id: 'weekly-revenue', label: 'Weekly' },
-      { id: 'top-clients', label: 'By Client' },
-      { id: 'menu-performance', label: 'By Menu Item' },
-      { id: 'client-revenue', label: 'Client Orders' },
+      { label: 'Trend', href: '/revenue/trend' },
+      { label: 'Weekly', href: '/revenue/weekly' },
+      { label: 'By Client', href: '/revenue/clients' },
+      { label: 'By Menu Item', href: '/revenue/menu' },
     ],
   },
   {
@@ -44,22 +52,10 @@ const NAV_ITEMS: NavItem[] = [
       </svg>
     ),
     children: [
-      { id: 'top-suppliers', label: 'By Supplier' },
-      { id: 'expense-details', label: 'All Transactions' },
+      { label: 'By Supplier', href: '/expenses/suppliers' },
+      { label: 'All Transactions', href: '/expenses/transactions' },
     ],
   },
-];
-
-// All scrollable section IDs for intersection tracking
-const ALL_SECTION_IDS = [
-  'overview',
-  'revenue-trend',
-  'weekly-revenue',
-  'top-clients',
-  'menu-performance',
-  'client-revenue',
-  'expense-details',
-  'top-suppliers',
 ];
 
 interface SidebarProps {
@@ -68,65 +64,18 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
+  const pathname = usePathname();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     revenue: true,
     expenses: true,
   });
-  const [activeSection, setActiveSection] = useState('overview');
 
-  // Toggle expand/collapse for parent items
-  const toggleExpand = useCallback((id: string) => {
-    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
-  }, []);
-
-  // Scroll to section
-  const scrollTo = useCallback(
-    (id: string) => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        setActiveSection(id);
-      }
-      // Close mobile sidebar after navigation
-      onMobileClose();
-    },
-    [onMobileClose]
-  );
-
-  // Track active section via IntersectionObserver
-  useEffect(() => {
-    const observers: IntersectionObserver[] = [];
-
-    ALL_SECTION_IDS.forEach((id) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              setActiveSection(id);
-            }
-          });
-        },
-        { rootMargin: '-20% 0px -60% 0px', threshold: 0 }
-      );
-
-      observer.observe(el);
-      observers.push(observer);
-    });
-
-    return () => observers.forEach((o) => o.disconnect());
-  }, []);
-
-  // Determine if a nav item or its child is active
-  const isActive = (id: string) => activeSection === id;
+  const isActive = (href: string) => pathname === href;
   const hasActiveChild = (item: NavItem) =>
-    item.children?.some((c) => activeSection === c.id) ?? false;
+    item.children?.some((c) => pathname === c.href) ?? false;
 
   return (
     <>
-      {/* Mobile backdrop */}
       {mobileOpen && (
         <div
           className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 lg:hidden"
@@ -134,12 +83,9 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-full w-60 bg-white border-r border-gray-100 z-50 flex flex-col transition-transform duration-300 ease-out
-          lg:translate-x-0
-          ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}
+          lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         {/* Logo */}
         <div className="flex items-center gap-3 px-5 h-16 border-b border-gray-100 flex-shrink-0">
@@ -164,80 +110,73 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           </p>
 
           {NAV_ITEMS.map((item) => {
-            const active = isActive(item.id) || hasActiveChild(item);
-            const isExpanded = expanded[item.id] ?? false;
-            const hasChildren = item.children && item.children.length > 0;
+            const active = item.href ? isActive(item.href) : hasActiveChild(item);
+            const isExp = expanded[item.id] ?? false;
+            const hasChildren = !!item.children?.length;
 
             return (
               <div key={item.id} className="mb-1">
                 {/* Parent item */}
-                <button
-                  onClick={() => {
-                    if (hasChildren) {
-                      toggleExpand(item.id);
-                    } else {
-                      scrollTo(item.id);
-                    }
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 group ${
-                    active && !hasChildren
-                      ? 'bg-primary/8 text-primary'
-                      : active
-                      ? 'text-primary'
-                      : 'text-gray-500 hover:text-navy hover:bg-gray-50'
-                  }`}
-                >
-                  <span
-                    className={`transition-colors duration-200 ${
-                      active ? 'text-primary' : 'text-gray-400 group-hover:text-gray-600'
+                {item.href && !hasChildren ? (
+                  <Link
+                    href={item.href}
+                    onClick={onMobileClose}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 group ${
+                      active
+                        ? 'bg-primary/8 text-primary'
+                        : 'text-gray-500 hover:text-navy hover:bg-gray-50'
                     }`}
                   >
-                    {item.icon}
-                  </span>
-                  <span className="flex-1 text-left">{item.label}</span>
-                  {hasChildren && (
+                    <span className={`transition-colors ${active ? 'text-primary' : 'text-gray-400 group-hover:text-gray-600'}`}>
+                      {item.icon}
+                    </span>
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {active && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => setExpanded((p) => ({ ...p, [item.id]: !p[item.id] }))}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 group ${
+                      active ? 'text-primary' : 'text-gray-500 hover:text-navy hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className={`transition-colors ${active ? 'text-primary' : 'text-gray-400 group-hover:text-gray-600'}`}>
+                      {item.icon}
+                    </span>
+                    <span className="flex-1 text-left">{item.label}</span>
                     <svg
-                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                        isExpanded ? 'rotate-90' : ''
-                      } ${active ? 'text-primary' : 'text-gray-300'}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${isExp ? 'rotate-90' : ''} ${active ? 'text-primary' : 'text-gray-300'}`}
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                  )}
-                  {!hasChildren && active && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  )}
-                </button>
+                  </button>
+                )}
 
                 {/* Children */}
-                {hasChildren && isExpanded && (
+                {hasChildren && isExp && (
                   <div className="ml-4 mt-0.5 space-y-0.5 sidebar-children">
                     {item.children!.map((child) => {
-                      const childActive = isActive(child.id);
+                      const childActive = isActive(child.href);
                       return (
-                        <button
-                          key={child.id}
-                          onClick={() => scrollTo(child.id)}
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          onClick={onMobileClose}
                           className={`w-full flex items-center gap-2.5 pl-5 pr-3 py-2 rounded-lg text-[12px] font-medium transition-all duration-200 relative ${
                             childActive
                               ? 'text-primary bg-primary/5'
                               : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
                           }`}
                         >
-                          {/* Left accent line */}
                           <span
-                            className={`absolute left-2 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-full transition-all duration-200 ${
+                            className={`absolute left-2 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-full transition-all ${
                               childActive ? 'bg-primary' : 'bg-gray-200'
                             }`}
                           />
                           {child.label}
-                          {childActive && (
-                            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
-                          )}
-                        </button>
+                          {childActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
+                        </Link>
                       );
                     })}
                   </div>
@@ -247,7 +186,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           })}
         </nav>
 
-        {/* Bottom section */}
+        {/* Bottom */}
         <div className="border-t border-gray-100 px-4 py-3 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div
