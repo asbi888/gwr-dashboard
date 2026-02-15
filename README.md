@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GWaveRunner Dashboard
+
+Analytics dashboard for **GWaveRunner Marine Catering** (Mauritius).
+
+Built with Next.js 14, TypeScript, Tailwind CSS, Recharts, and Supabase.
+
+## Features
+
+- **KPI Cards** - Revenue, Expenses, Profit/Loss, Orders with trend indicators
+- **Revenue vs Expenses Chart** - Monthly comparison line chart
+- **Weekly Revenue** - Bar chart with gradient fills
+- **Top Clients** - Ranked by total revenue with progress bars
+- **Top Suppliers** - Ranked by total spend with category tags
+- **Menu Performance** - Donut chart showing revenue by menu item
+- **Responsive** - Works on desktop, tablet, and mobile
+- **Loading Skeletons** - Smooth loading states for all components
 
 ## Getting Started
 
-First, run the development server:
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure environment
+
+Copy `.env.local.example` to `.env.local` and fill in your Supabase credentials:
+
+```bash
+cp .env.local.example .env.local
+```
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+### 3. Run development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the dashboard.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deployment (Vercel)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Push repository to GitHub
+2. Import project in [Vercel](https://vercel.com)
+3. Add environment variables in Vercel project settings:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. Deploy
 
-## Learn More
+## Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+| Technology | Purpose |
+|---|---|
+| Next.js 14 | App Router, React framework |
+| TypeScript | Type safety |
+| Tailwind CSS v4 | Styling |
+| Recharts | Charts and data visualization |
+| Supabase | Database (PostgreSQL) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Database Tables
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Table | Description |
+|---|---|
+| `gwr_expenses` | Expense transactions with supplier references |
+| `gwr_suppliers` | Supplier master data with categories |
+| `gwr_revenue` | Revenue orders per client |
+| `gwr_revenue_lines` | Line items per order (menu items) |
