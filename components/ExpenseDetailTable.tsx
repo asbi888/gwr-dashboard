@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Expense, Supplier } from '@/lib/supabase';
 import { formatCurrencyFull, formatDate } from '@/lib/utils';
 
@@ -68,7 +68,7 @@ export default function ExpenseDetailTable({ expenses, suppliers }: ExpenseDetai
   const pageData = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   // Reset page when data changes
-  useMemo(() => setPage(0), [expenses]);
+  useEffect(() => setPage(0), [expenses]);
 
   function handleSort(field: SortField) {
     if (sortField === field) {

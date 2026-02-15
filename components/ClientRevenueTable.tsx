@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Revenue, RevenueLine } from '@/lib/supabase';
 import { formatCurrencyFull, formatDate } from '@/lib/utils';
 
@@ -45,7 +45,7 @@ export default function ClientRevenueTable({
   const pageData = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   // Reset page when data changes
-  useMemo(() => setPage(0), [revenue]);
+  useEffect(() => setPage(0), [revenue]);
 
   // Totals
   const totalRevenue = revenue.reduce((sum, r) => {

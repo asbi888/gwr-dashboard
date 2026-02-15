@@ -150,6 +150,19 @@ export function resolvePresetToRange(preset: DatePreset, customRange: DateRange)
   }
 }
 
+// Normalize client name — preserve each word's capitalisation for short words (like "WR"),
+// and title-case longer words. This keeps "WR" as "WR", "Long Shot" as "Long Shot", etc.
+export function normalizeClientName(raw: string): string {
+  return raw
+    .trim()
+    .split(/\s+/)
+    .map((word) => {
+      if (word.length <= 2) return word.toUpperCase(); // "WR" stays "WR"
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ');
+}
+
 // Format relative time for "Updated Xs ago"
 export function formatTimeAgo(date: Date): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);

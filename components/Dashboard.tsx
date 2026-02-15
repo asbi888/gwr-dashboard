@@ -13,6 +13,7 @@ import {
   formatPercent,
   percentChange,
   resolvePresetToRange,
+  normalizeClientName,
   type DashboardFilters,
   DEFAULT_FILTERS,
 } from '@/lib/utils';
@@ -54,8 +55,7 @@ function applyFilters(data: DashboardData, filters: DashboardFilters): Dashboard
   // Client filter (revenue only — expenses have no client field)
   if (filters.clientName) {
     filteredRevenue = filteredRevenue.filter((r) => {
-      const normalized = r.client_name.charAt(0).toUpperCase() + r.client_name.slice(1).toLowerCase();
-      return normalized === filters.clientName;
+      return normalizeClientName(r.client_name) === filters.clientName;
     });
   }
 
@@ -145,7 +145,7 @@ function buildTopClients(revenue: Revenue[], revenueLines: RevenueLine[]) {
 
   const clientMap: Record<string, { orders: number; revenue: number }> = {};
   revenue.forEach((r) => {
-    const name = r.client_name.charAt(0).toUpperCase() + r.client_name.slice(1).toLowerCase();
+    const name = normalizeClientName(r.client_name);
     if (!clientMap[name]) clientMap[name] = { orders: 0, revenue: 0 };
     clientMap[name].orders += 1;
     clientMap[name].revenue += revenueByOrder[r.revenue_id] || r.total_revenue;
@@ -321,8 +321,7 @@ export default function Dashboard() {
     if (!data) return [];
     const names = new Set<string>();
     data.revenue.forEach((r) => {
-      const name = r.client_name.charAt(0).toUpperCase() + r.client_name.slice(1).toLowerCase();
-      names.add(name);
+      names.add(normalizeClientName(r.client_name));
     });
     return Array.from(names).sort();
   }, [data]);
