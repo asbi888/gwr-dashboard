@@ -398,107 +398,125 @@ export default function Dashboard() {
 
   return (
     <>
-      {/* Header */}
-      <div className="mb-4 animate-fade-in-up opacity-0">
-        <h2 className="text-2xl font-bold text-navy">Dashboard</h2>
-        <p className="text-sm text-gray-400 mt-0.5">
-          GWaveRunner Marine Catering &middot; Mauritius
-        </p>
-      </div>
+      {/* Header + Filter Bar */}
+      <section id="overview" className="scroll-mt-20">
+        <div className="mb-4 animate-fade-in-up opacity-0">
+          <h2 className="text-2xl font-bold text-navy">Dashboard</h2>
+          <p className="text-sm text-gray-400 mt-0.5">
+            GWaveRunner Marine Catering &middot; Mauritius
+          </p>
+        </div>
 
-      {/* Filter Bar */}
-      <FilterBar
-        filters={filters}
-        onFiltersChange={setFilters}
-        clientNames={clientNames}
-        lastRefreshed={lastRefreshed}
-      />
+        {/* Filter Bar */}
+        <FilterBar
+          filters={filters}
+          onFiltersChange={setFilters}
+          clientNames={clientNames}
+          lastRefreshed={lastRefreshed}
+        />
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
-        <KPICard
-          title="Total Revenue"
-          value={formatCurrency(kpis.totalRevenue)}
-          trend={{
-            value: formatPercent(kpis.revTrend),
-            isPositive: kpis.revTrend >= 0,
-          }}
-          subtitle={trendSubtitle}
-          icon={<RevenueIcon />}
-          gradient="linear-gradient(135deg, #7B61FF 0%, #9F8FFF 100%)"
-          delay="delay-100"
-        />
-        <KPICard
-          title="Total Expenses"
-          value={formatCurrency(kpis.totalExpenses)}
-          trend={{
-            value: formatPercent(kpis.expTrend),
-            isPositive: kpis.expTrend <= 0,
-          }}
-          subtitle={trendSubtitle}
-          icon={<ExpenseIcon />}
-          gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-          delay="delay-200"
-        />
-        <KPICard
-          title="Profit / Loss"
-          value={formatCurrency(kpis.profitLoss)}
-          trend={{
-            value: `${kpis.profitMargin.toFixed(1)}% margin`,
-            isPositive: kpis.profitLoss >= 0,
-          }}
-          icon={<ProfitIcon />}
-          gradient={
-            kpis.profitLoss >= 0
-              ? 'linear-gradient(135deg, #01B574 0%, #38D9A9 100%)'
-              : 'linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%)'
-          }
-          delay="delay-300"
-        />
-        <KPICard
-          title="Total Orders"
-          value={kpis.totalOrders.toLocaleString()}
-          trend={{
-            value: formatPercent(kpis.orderTrend),
-            isPositive: kpis.orderTrend >= 0,
-          }}
-          subtitle={`Avg ${formatCurrency(kpis.avgOrderValue)}`}
-          icon={<OrdersIcon />}
-          gradient="linear-gradient(135deg, #4FD1C5 0%, #81E6D9 100%)"
-          delay="delay-400"
-        />
-      </div>
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+          <KPICard
+            title="Total Revenue"
+            value={formatCurrency(kpis.totalRevenue)}
+            trend={{
+              value: formatPercent(kpis.revTrend),
+              isPositive: kpis.revTrend >= 0,
+            }}
+            subtitle={trendSubtitle}
+            icon={<RevenueIcon />}
+            gradient="linear-gradient(135deg, #7B61FF 0%, #9F8FFF 100%)"
+            delay="delay-100"
+          />
+          <KPICard
+            title="Total Expenses"
+            value={formatCurrency(kpis.totalExpenses)}
+            trend={{
+              value: formatPercent(kpis.expTrend),
+              isPositive: kpis.expTrend <= 0,
+            }}
+            subtitle={trendSubtitle}
+            icon={<ExpenseIcon />}
+            gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+            delay="delay-200"
+          />
+          <KPICard
+            title="Profit / Loss"
+            value={formatCurrency(kpis.profitLoss)}
+            trend={{
+              value: `${kpis.profitMargin.toFixed(1)}% margin`,
+              isPositive: kpis.profitLoss >= 0,
+            }}
+            icon={<ProfitIcon />}
+            gradient={
+              kpis.profitLoss >= 0
+                ? 'linear-gradient(135deg, #01B574 0%, #38D9A9 100%)'
+                : 'linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%)'
+            }
+            delay="delay-300"
+          />
+          <KPICard
+            title="Total Orders"
+            value={kpis.totalOrders.toLocaleString()}
+            trend={{
+              value: formatPercent(kpis.orderTrend),
+              isPositive: kpis.orderTrend >= 0,
+            }}
+            subtitle={`Avg ${formatCurrency(kpis.avgOrderValue)}`}
+            icon={<OrdersIcon />}
+            gradient="linear-gradient(135deg, #4FD1C5 0%, #81E6D9 100%)"
+            delay="delay-400"
+          />
+        </div>
+      </section>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
-        <RevenueExpenseChart data={monthlyChart} />
-        <WeeklyRevenueChart
-          data={weeklyData}
-          subtitle={isFiltered ? 'For selected period' : undefined}
-        />
-      </div>
+      {/* Revenue Trend Chart */}
+      <section id="revenue-trend" className="scroll-mt-20 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <RevenueExpenseChart data={monthlyChart} />
+          <div id="weekly-revenue">
+            <WeeklyRevenueChart
+              data={weeklyData}
+              subtitle={isFiltered ? 'For selected period' : undefined}
+            />
+          </div>
+        </div>
+      </section>
 
-      {/* Bottom Row - Aggregated views */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        <TopClientsTable data={topClients} />
-        <TopSuppliersTable data={topSuppliers} />
-        <MenuPieChart data={menuData} />
-      </div>
+      {/* Aggregated Views Row */}
+      <section className="scroll-mt-20 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div id="top-clients" className="scroll-mt-20">
+            <TopClientsTable data={topClients} />
+          </div>
+          <div id="top-suppliers" className="scroll-mt-20">
+            <TopSuppliersTable data={topSuppliers} />
+          </div>
+          <div id="menu-performance" className="scroll-mt-20">
+            <MenuPieChart data={menuData} />
+          </div>
+        </div>
+      </section>
 
       {/* Client Revenue Detail (visible when client filter active) */}
-      {filters.clientName && (
-        <ClientRevenueTable
-          clientName={filters.clientName}
-          revenue={filtered.revenue}
-          revenueLines={filtered.revenueLines}
-        />
-      )}
+      <section id="client-revenue" className="scroll-mt-20">
+        {filters.clientName && (
+          <ClientRevenueTable
+            clientName={filters.clientName}
+            revenue={filtered.revenue}
+            revenueLines={filtered.revenueLines}
+          />
+        )}
+      </section>
 
       {/* Expense Detail Table */}
-      <ExpenseDetailTable
-        expenses={filtered.expenses}
-        suppliers={filtered.suppliers}
-      />
+      <section id="expense-details" className="scroll-mt-20">
+        <ExpenseDetailTable
+          expenses={filtered.expenses}
+          suppliers={filtered.suppliers}
+        />
+      </section>
     </>
   );
 }
