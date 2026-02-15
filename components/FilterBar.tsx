@@ -56,7 +56,7 @@ export default function FilterBar({
   const hasActiveFilters = filters.datePreset !== 'all_time' || filters.clientName !== null;
 
   return (
-    <div className="animate-fade-in-up opacity-0 delay-100 mb-6">
+    <div className="animate-fade-in-up opacity-0 delay-100 mb-6 relative z-20">
       <div className="bg-white rounded-2xl px-5 py-4 shadow-lg shadow-gray-200/50">
         <div className="flex flex-col lg:flex-row lg:items-center gap-4">
           {/* Date Preset Pills */}
