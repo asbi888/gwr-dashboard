@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import { DashboardDataProvider } from '@/lib/data-context';
-import { ToastProvider } from '@/components/ui/Toast';
-import AppShell from '@/components/AppShell';
+import { AuthProvider } from '@/lib/auth-context';
 import './globals.css';
 
 const geistSans = Geist({
@@ -27,11 +25,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background`}>
-        <DashboardDataProvider>
-          <ToastProvider>
-            <AppShell>{children}</AppShell>
-          </ToastProvider>
-        </DashboardDataProvider>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

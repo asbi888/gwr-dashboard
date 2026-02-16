@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
+import { getVisibleNavIds } from '@/lib/permissions';
 
 interface NavChild {
   label: string;
@@ -70,6 +72,18 @@ const NAV_ITEMS: NavItem[] = [
       { label: 'Data Entry', href: '/operations/data-entry' },
     ],
   },
+  {
+    id: 'admin',
+    label: 'Admin',
+    icon: (
+      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+    ),
+    children: [
+      { label: 'User Management', href: '/admin/users' },
+    ],
+  },
 ];
 
 interface SidebarProps {
@@ -79,15 +93,31 @@ interface SidebarProps {
 
 export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
+  const { profile, signOut } = useAuth();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     revenue: true,
     expenses: true,
     operations: true,
+    admin: true,
   });
+
+  const visibleIds = profile ? getVisibleNavIds(profile.role) : [];
+  const filteredItems = NAV_ITEMS.filter((item) => visibleIds.includes(item.id));
 
   const isActive = (href: string) => pathname === href;
   const hasActiveChild = (item: NavItem) =>
     item.children?.some((c) => pathname === c.href) ?? false;
+
+  const initials = profile?.full_name
+    ?.split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || 'GW';
+
+  const roleName = profile?.role
+    ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
+    : '';
 
   return (
     <>
@@ -123,7 +153,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
             Navigation
           </p>
 
-          {NAV_ITEMS.map((item) => {
+          {filteredItems.map((item) => {
             const active = item.href ? isActive(item.href) : hasActiveChild(item);
             const isExp = expanded[item.id] ?? false;
             const hasChildren = !!item.children?.length;
@@ -200,19 +230,30 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           })}
         </nav>
 
-        {/* Bottom */}
+        {/* Bottom: User info + Sign out */}
         <div className="border-t border-gray-100 px-4 py-3 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div
               className="flex items-center justify-center w-8 h-8 rounded-lg text-white text-[11px] font-bold flex-shrink-0"
               style={{ background: 'linear-gradient(135deg, #7B61FF 0%, #4FD1C5 100%)' }}
             >
-              GW
+              {initials}
             </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-semibold text-navy truncate">Admin</p>
-              <p className="text-[10px] text-gray-400 truncate">gwr@marine.mu</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-semibold text-navy truncate">
+                {profile?.full_name || 'User'}
+              </p>
+              <p className="text-[10px] text-gray-400 truncate">{roleName}</p>
             </div>
+            <button
+              onClick={signOut}
+              title="Sign out"
+              className="flex items-center justify-center w-7 h-7 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
           </div>
         </div>
       </aside>

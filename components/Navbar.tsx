@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 
 interface NavbarProps {
   onMenuToggle: () => void;
@@ -18,12 +19,38 @@ const PAGE_TITLES: Record<string, string> = {
   '/expenses/transactions': 'All Transactions',
   '/operations/inventory': 'Operations - Inventory',
   '/operations/data-entry': 'Data Entry',
+  '/admin/users': 'User Management',
 };
 
 export default function Navbar({ onMenuToggle }: NavbarProps) {
   const [searchOpen, setSearchOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const pathname = usePathname();
   const pageTitle = PAGE_TITLES[pathname] || 'Dashboard';
+  const { profile, signOut } = useAuth();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const initials = profile?.full_name
+    ?.split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || 'GW';
+
+  const roleName = profile?.role
+    ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
+    : '';
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <nav className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-gray-100">
@@ -100,12 +127,44 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
               <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary rounded-full" />
             </button>
 
-            {/* Profile */}
-            <div
-              className="flex items-center justify-center w-9 h-9 rounded-xl text-white text-[11px] font-bold cursor-pointer"
-              style={{ background: 'linear-gradient(135deg, #7B61FF 0%, #4FD1C5 100%)' }}
-            >
-              GW
+            {/* Profile dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setProfileOpen(!profileOpen)}
+                className="flex items-center justify-center w-9 h-9 rounded-xl text-white text-[11px] font-bold cursor-pointer transition-shadow hover:shadow-md"
+                style={{ background: 'linear-gradient(135deg, #7B61FF 0%, #4FD1C5 100%)' }}
+              >
+                {initials}
+              </button>
+
+              {profileOpen && (
+                <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl shadow-gray-200/60 border border-gray-100 py-2 z-50">
+                  {/* User info */}
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <p className="text-xs font-semibold text-navy truncate">
+                      {profile?.full_name || 'User'}
+                    </p>
+                    <p className="text-[10px] text-gray-400 truncate">{profile?.email}</p>
+                    <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-semibold bg-primary/10 text-primary">
+                      {roleName}
+                    </span>
+                  </div>
+
+                  {/* Sign out */}
+                  <button
+                    onClick={() => {
+                      setProfileOpen(false);
+                      signOut();
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Sign Out
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
