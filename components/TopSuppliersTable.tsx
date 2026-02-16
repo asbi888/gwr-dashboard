@@ -10,6 +10,7 @@ interface SupplierData {
 
 interface TopSuppliersTableProps {
   data: SupplierData[];
+  onSupplierClick?: (name: string) => void;
 }
 
 const categoryColors: Record<string, { bg: string; text: string }> = {
@@ -30,7 +31,7 @@ function getCategoryStyle(category: string) {
   return categoryColors[key || 'default'];
 }
 
-export default function TopSuppliersTable({ data }: TopSuppliersTableProps) {
+export default function TopSuppliersTable({ data, onSupplierClick }: TopSuppliersTableProps) {
   const maxTotal = Math.max(...data.map((d) => d.total), 1);
 
   return (
@@ -43,7 +44,11 @@ export default function TopSuppliersTable({ data }: TopSuppliersTableProps) {
         {data.map((supplier, idx) => {
           const catStyle = getCategoryStyle(supplier.category);
           return (
-            <div key={supplier.name}>
+            <div
+              key={supplier.name}
+              onClick={() => onSupplierClick?.(supplier.name)}
+              className={onSupplierClick ? 'cursor-pointer rounded-xl px-2 py-1.5 -mx-2 hover:bg-gray-50 transition-colors group/row' : ''}
+            >
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-3 min-w-0">
                   <span
@@ -60,8 +65,13 @@ export default function TopSuppliersTable({ data }: TopSuppliersTableProps) {
                     {idx + 1}
                   </span>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-navy truncate">
+                    <p className="text-sm font-semibold text-navy truncate flex items-center gap-1">
                       {supplier.name}
+                      {onSupplierClick && (
+                        <svg className="w-3 h-3 text-gray-300 group-hover/row:text-primary transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      )}
                     </p>
                     <span
                       className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-medium"

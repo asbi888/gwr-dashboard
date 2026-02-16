@@ -67,8 +67,13 @@ export default function ExpensesSuppliersPage() {
           );
         }
 
-        const totalExpenses = filteredExpenses.reduce((s, e) => s + e.total_amount, 0);
-        const uniqueSupplierCount = new Set(filteredExpenses.map((e) => e.supplier_key)).size;
+        // Dynamic KPIs — reflect selected supplier if any
+        const kpiExpenses = selectedSupplier ? displayedExpenses : filteredExpenses;
+        const totalExpenses = kpiExpenses.reduce((s, e) => s + e.total_amount, 0);
+        const uniqueSupplierCount = selectedSupplier
+          ? 1
+          : new Set(filteredExpenses.map((e) => e.supplier_key)).size;
+        const transactionCount = kpiExpenses.length;
 
         const filteredSupplierNames = supplierNames.filter((n) =>
           n.toLowerCase().includes(supplierSearch.toLowerCase())
@@ -208,29 +213,48 @@ export default function ExpensesSuppliersPage() {
               </div>
             </div>
 
-            {/* Summary */}
+            {/* Summary — dynamic based on selected supplier */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
               <div className="bg-white rounded-2xl p-5 shadow-lg shadow-gray-200/50 animate-fade-in-up opacity-0 delay-200">
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Suppliers</p>
-                <p className="text-2xl font-bold text-navy">{uniqueSupplierCount}</p>
-                <p className="text-xs text-gray-400 mt-0.5">active in period</p>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                  {selectedSupplier ? 'Supplier' : 'Suppliers'}
+                </p>
+                <p className="text-2xl font-bold text-navy">
+                  {selectedSupplier || uniqueSupplierCount}
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {selectedSupplier ? 'selected' : 'active in period'}
+                </p>
               </div>
               <div className="bg-white rounded-2xl p-5 shadow-lg shadow-gray-200/50 animate-fade-in-up opacity-0 delay-300">
                 <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Expenses</p>
                 <p className="text-2xl font-bold text-accent-red">{formatCurrency(totalExpenses)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{filteredExpenses.length} transactions</p>
+                <p className="text-xs text-gray-400 mt-0.5">{transactionCount} transactions</p>
               </div>
               <div className="bg-white rounded-2xl p-5 shadow-lg shadow-gray-200/50 animate-fade-in-up opacity-0 delay-400">
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Avg per Supplier</p>
-                <p className="text-2xl font-bold text-secondary">{formatCurrency(uniqueSupplierCount > 0 ? totalExpenses / uniqueSupplierCount : 0)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">average spend</p>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                  {selectedSupplier ? 'Avg per Transaction' : 'Avg per Supplier'}
+                </p>
+                <p className="text-2xl font-bold text-secondary">
+                  {formatCurrency(
+                    selectedSupplier
+                      ? (transactionCount > 0 ? totalExpenses / transactionCount : 0)
+                      : (uniqueSupplierCount > 0 ? totalExpenses / uniqueSupplierCount : 0)
+                  )}
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {selectedSupplier ? 'average amount' : 'average spend'}
+                </p>
               </div>
             </div>
 
-            {/* Top Suppliers Table */}
+            {/* Top Suppliers Table — click a supplier to drill down */}
             {!selectedSupplier && (
               <div className="animate-fade-in-up opacity-0 delay-400">
-                <TopSuppliersTable data={topSuppliers} />
+                <TopSuppliersTable
+                  data={topSuppliers}
+                  onSupplierClick={(name) => setSelectedSupplier(name)}
+                />
               </div>
             )}
 
@@ -241,18 +265,12 @@ export default function ExpensesSuppliersPage() {
               </div>
             )}
 
-            {/* Hint to select supplier */}
+            {/* Hint — only show on mobile where tap targets might be less obvious */}
             {!selectedSupplier && (
-              <div className="animate-fade-in-up opacity-0 delay-500 mt-6">
-                <div className="bg-primary/5 rounded-2xl p-6 border border-primary/10 text-center">
-                  <svg className="w-8 h-8 text-primary/40 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
-                  </svg>
-                  <p className="text-sm font-medium text-navy mb-1">Select a supplier to see their expenses</p>
-                  <p className="text-xs text-gray-400">
-                    Use the supplier filter above to drill down into a specific supplier&apos;s expense transactions
-                  </p>
-                </div>
+              <div className="animate-fade-in-up opacity-0 delay-500 mt-4 sm:hidden">
+                <p className="text-[10px] text-gray-400 text-center">
+                  Tap a supplier above to see their expense details
+                </p>
               </div>
             )}
           </>

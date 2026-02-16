@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 interface NavChild {
@@ -89,14 +90,13 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
       >
         {/* Logo */}
         <div className="flex items-center gap-3 px-5 h-16 border-b border-gray-100 flex-shrink-0">
-          <div
-            className="flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #7B61FF 0%, #4FD1C5 100%)' }}
-          >
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-          </div>
+          <Image
+            src="/gwr-logo.png"
+            alt="GWaveRunner"
+            width={36}
+            height={36}
+            className="rounded-lg flex-shrink-0 object-contain"
+          />
           <div className="min-w-0">
             <h1 className="text-sm font-bold text-navy leading-tight truncate">GWaveRunner</h1>
             <p className="text-[10px] text-gray-400 -mt-0.5">Marine Catering</p>
