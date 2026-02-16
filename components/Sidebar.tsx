@@ -67,6 +67,7 @@ const NAV_ITEMS: NavItem[] = [
     ),
     children: [
       { label: 'Inventory', href: '/operations/inventory' },
+      { label: 'Data Entry', href: '/operations/data-entry' },
     ],
   },
 ];

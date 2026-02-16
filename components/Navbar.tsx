@@ -17,6 +17,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/expenses/suppliers': 'Expenses by Supplier',
   '/expenses/transactions': 'All Transactions',
   '/operations/inventory': 'Operations - Inventory',
+  '/operations/data-entry': 'Data Entry',
 };
 
 export default function Navbar({ onMenuToggle }: NavbarProps) {

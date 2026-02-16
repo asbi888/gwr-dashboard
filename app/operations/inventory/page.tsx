@@ -1,10 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import PageShell from '@/components/PageShell';
 import InventoryAlertCard from '@/components/InventoryAlertCard';
 import FoodUsageChart from '@/components/FoodUsageChart';
 import DrinksChart from '@/components/DrinksChart';
 import InventoryTable from '@/components/InventoryTable';
+import Modal from '@/components/ui/Modal';
+import FoodUsageForm from '@/components/forms/FoodUsageForm';
+import DrinksUsageForm from '@/components/forms/DrinksUsageForm';
 import {
   computeInventory,
   buildFoodPurchaseVsUsage,
@@ -13,6 +17,9 @@ import {
 import { formatTimeAgo } from '@/lib/utils';
 
 export default function OperationsInventoryPage() {
+  const [showFoodModal, setShowFoodModal] = useState(false);
+  const [showDrinksModal, setShowDrinksModal] = useState(false);
+
   return (
     <PageShell
       title="Operations - Inventory"
@@ -52,6 +59,26 @@ export default function OperationsInventoryPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-3 sm:ml-auto">
+                    {/* Quick action buttons */}
+                    <button
+                      onClick={() => setShowFoodModal(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-white text-[10px] font-medium hover:bg-primary-dark transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Log Food Usage
+                    </button>
+                    <button
+                      onClick={() => setShowDrinksModal(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-secondary text-white text-[10px] font-medium hover:opacity-90 transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Log Drinks
+                    </button>
+
                     {lastRefreshed && (
                       <span className="text-[10px] text-gray-400 whitespace-nowrap">
                         Updated {formatTimeAgo(lastRefreshed)}
@@ -91,6 +118,22 @@ export default function OperationsInventoryPage() {
             <div className="animate-fade-in-up opacity-0 delay-500">
               <InventoryTable data={inventory} />
             </div>
+
+            {/* Log Food Usage Modal */}
+            <Modal open={showFoodModal} onClose={() => setShowFoodModal(false)} title="Log Food Usage">
+              <FoodUsageForm
+                onSave={() => setShowFoodModal(false)}
+                onCancel={() => setShowFoodModal(false)}
+              />
+            </Modal>
+
+            {/* Log Drinks Usage Modal */}
+            <Modal open={showDrinksModal} onClose={() => setShowDrinksModal(false)} title="Log Drinks Usage">
+              <DrinksUsageForm
+                onSave={() => setShowDrinksModal(false)}
+                onCancel={() => setShowDrinksModal(false)}
+              />
+            </Modal>
           </>
         );
       }}

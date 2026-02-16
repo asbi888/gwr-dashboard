@@ -4,17 +4,31 @@ import { useState, useRef, useEffect } from 'react';
 import PageShell from '@/components/PageShell';
 import KPICard from '@/components/KPICard';
 import ExpenseDetailTable from '@/components/ExpenseDetailTable';
+import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import { useToast } from '@/components/ui/Toast';
+import { useDashboardData } from '@/lib/data-context';
+import ExpenseForm from '@/components/forms/ExpenseForm';
+import { deleteExpense } from '@/lib/mutations';
 import { getUniqueSupplierNames } from '@/lib/processing';
 import { formatCurrency, formatPercent, percentChange, resolvePresetToRange, type DatePreset } from '@/lib/utils';
 import { formatTimeAgo } from '@/lib/utils';
+import type { Expense } from '@/lib/supabase';
 
 export default function AllTransactionsPage() {
+  const { refresh } = useDashboardData();
+  const { toast } = useToast();
   const [datePreset, setDatePreset] = useState<DatePreset>('all_time');
   const [dateRange, setDateRange] = useState<{ from: string | null; to: string | null }>({ from: null, to: null });
   const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null);
   const [supplierSearch, setSupplierSearch] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // CRUD state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [deletingExpense, setDeletingExpense] = useState<Expense | null>(null);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -196,8 +210,17 @@ export default function AllTransactionsPage() {
                     )}
                   </div>
 
-                  {/* Clear + Live */}
+                  {/* Add + Clear + Live */}
                   <div className="flex items-center gap-3 lg:ml-auto">
+                    <button
+                      onClick={() => setShowAddModal(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-white text-xs font-medium hover:bg-primary-dark transition-colors"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Add Expense
+                    </button>
                     {hasActiveFilters && (
                       <button
                         onClick={() => { setDatePreset('all_time'); setDateRange({ from: null, to: null }); setSelectedSupplier(null); }}
@@ -260,8 +283,51 @@ export default function AllTransactionsPage() {
 
             {/* Full Expense Table */}
             <div className="animate-fade-in-up opacity-0 delay-300">
-              <ExpenseDetailTable expenses={displayedExpenses} suppliers={data.suppliers} />
+              <ExpenseDetailTable
+                expenses={displayedExpenses}
+                suppliers={data.suppliers}
+                onEdit={(expense) => setEditingExpense(expense)}
+                onDelete={(expense) => setDeletingExpense(expense)}
+              />
             </div>
+
+            {/* Add Expense Modal */}
+            <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Add Expense" size="lg">
+              <ExpenseForm
+                suppliers={data.suppliers}
+                onSave={() => setShowAddModal(false)}
+                onCancel={() => setShowAddModal(false)}
+              />
+            </Modal>
+
+            {/* Edit Expense Modal */}
+            <Modal open={!!editingExpense} onClose={() => setEditingExpense(null)} title="Edit Expense" size="lg">
+              {editingExpense && (
+                <ExpenseForm
+                  initialData={editingExpense}
+                  suppliers={data.suppliers}
+                  onSave={() => setEditingExpense(null)}
+                  onCancel={() => setEditingExpense(null)}
+                />
+              )}
+            </Modal>
+
+            {/* Delete Expense Confirm */}
+            <ConfirmDialog
+              open={!!deletingExpense}
+              onClose={() => setDeletingExpense(null)}
+              onConfirm={async () => {
+                if (deletingExpense) {
+                  await deleteExpense(deletingExpense.expense_id);
+                  setDeletingExpense(null);
+                  await refresh();
+                  toast('Expense deleted', 'success');
+                }
+              }}
+              title="Delete Expense"
+              message={`Are you sure you want to delete "${deletingExpense?.description}"? This action cannot be undone.`}
+              variant="danger"
+            />
           </>
         );
       }}

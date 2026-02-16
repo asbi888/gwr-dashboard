@@ -3,10 +3,13 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { Expense, Supplier } from '@/lib/supabase';
 import { formatCurrencyFull, formatDate } from '@/lib/utils';
+import InlineActions from '@/components/InlineActions';
 
 interface ExpenseDetailTableProps {
   expenses: Expense[];
   suppliers: Supplier[];
+  onEdit?: (expense: Expense) => void;
+  onDelete?: (expense: Expense) => void;
 }
 
 type SortField = 'expense_date' | 'supplier' | 'description' | 'category' | 'net_amount' | 'vat_amount' | 'total_amount' | 'payment_method';
@@ -14,7 +17,8 @@ type SortDir = 'asc' | 'desc';
 
 const PAGE_SIZE = 15;
 
-export default function ExpenseDetailTable({ expenses, suppliers }: ExpenseDetailTableProps) {
+export default function ExpenseDetailTable({ expenses, suppliers, onEdit, onDelete }: ExpenseDetailTableProps) {
+  const hasActions = !!onEdit || !!onDelete;
   const [sortField, setSortField] = useState<SortField>('expense_date');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [page, setPage] = useState(0);
@@ -130,6 +134,9 @@ export default function ExpenseDetailTable({ expenses, suppliers }: ExpenseDetai
                       <SortIcon field={field} />
                     </th>
                   ))}
+                  {hasActions && (
+                    <th className="pb-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -161,9 +168,17 @@ export default function ExpenseDetailTable({ expenses, suppliers }: ExpenseDetai
                     <td className="py-3 pr-3 text-xs font-semibold text-navy text-right whitespace-nowrap">
                       {formatCurrencyFull(expense.total_amount)}
                     </td>
-                    <td className="py-3 text-xs text-gray-500 whitespace-nowrap">
+                    <td className="py-3 pr-3 text-xs text-gray-500 whitespace-nowrap">
                       {expense.payment_method || '—'}
                     </td>
+                    {hasActions && (
+                      <td className="py-3 text-right">
+                        <InlineActions
+                          onEdit={() => onEdit?.(expense)}
+                          onDelete={() => onDelete?.(expense)}
+                        />
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
