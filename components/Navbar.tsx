@@ -16,6 +16,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/revenue/menu': 'Menu Performance',
   '/expenses/suppliers': 'Expenses by Supplier',
   '/expenses/transactions': 'All Transactions',
+  '/operations/inventory': 'Operations - Inventory',
 };
 
 export default function Navbar({ onMenuToggle }: NavbarProps) {

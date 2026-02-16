@@ -7,6 +7,9 @@ import {
   type Supplier,
   type Revenue,
   type RevenueLine,
+  type FoodUsage,
+  type DrinksUsage,
+  type WRRevenue,
 } from './supabase';
 
 export interface DashboardData {
@@ -14,6 +17,9 @@ export interface DashboardData {
   suppliers: Supplier[];
   revenue: Revenue[];
   revenueLines: RevenueLine[];
+  foodUsage: FoodUsage[];
+  drinksUsage: DrinksUsage[];
+  wrRevenue: WRRevenue[];
 }
 
 interface DataContextValue {

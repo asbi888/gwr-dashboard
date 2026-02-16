@@ -6,7 +6,7 @@ import PageShell from '@/components/PageShell';
 import KPICard from '@/components/KPICard';
 import RevenueExpenseChart from '@/components/RevenueExpenseChart';
 import FilterBar from '@/components/FilterBar';
-import { computeKPIs, buildMonthlyChart, buildTopClients, buildTopSuppliers, applyFilters, getUniqueClientNames } from '@/lib/processing';
+import { computeKPIs, buildMonthlyChart, buildTopClients, buildTopSuppliers, applyFilters, getUniqueClientNames, computeInventory } from '@/lib/processing';
 import { formatCurrency, formatPercent, formatCurrencyFull, DEFAULT_FILTERS, type DashboardFilters } from '@/lib/utils';
 
 const QUICK_LINKS = [
@@ -54,6 +54,17 @@ const QUICK_LINKS = [
       </svg>
     ),
   },
+  {
+    href: '/operations/inventory',
+    label: 'Inventory',
+    desc: 'Food & beverage stock levels',
+    gradient: 'linear-gradient(135deg, #01B574 0%, #38D9A9 100%)',
+    icon: (
+      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+      </svg>
+    ),
+  },
 ];
 
 export default function OverviewPage() {
@@ -73,9 +84,11 @@ export default function OverviewPage() {
         const clientNames = getUniqueClientNames(data.revenue);
         const filtered = applyFilters(data, filters);
         const kpis = computeKPIs(filtered);
-        const monthlyChart = buildMonthlyChart(filtered.revenue, filtered.revenueLines, filtered.expenses);
+        const monthlyChart = buildMonthlyChart(filtered.revenue, filtered.revenueLines, filtered.expenses, data.wrRevenue);
         const topClients = buildTopClients(filtered.revenue, filtered.revenueLines, 3);
         const topSuppliers = buildTopSuppliers(filtered.expenses, data.suppliers, 3);
+        const inventory = computeInventory(data.expenses, data.foodUsage);
+        const criticalItems = inventory.filter((i) => i.status === 'red');
 
         return (
           <>
@@ -85,6 +98,28 @@ export default function OverviewPage() {
               clientNames={clientNames}
               lastRefreshed={lastRefreshed}
             />
+
+            {/* Inventory Alert Banner */}
+            {criticalItems.length > 0 && (
+              <div className="animate-fade-in-up opacity-0 delay-100 mb-6">
+                <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg className="w-4 h-4 text-accent-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <h3 className="text-xs font-bold text-accent-red">Inventory Alert</h3>
+                  </div>
+                  {criticalItems.map((item) => (
+                    <p key={item.productKey} className="text-xs text-red-600 ml-6">
+                      {item.product}: {item.onHand.toFixed(1)} kg on hand ({item.daysSupply} days supply)
+                    </p>
+                  ))}
+                  <Link href="/operations/inventory" className="text-xs text-primary font-medium mt-2 ml-6 inline-block hover:underline">
+                    View full inventory details →
+                  </Link>
+                </div>
+              </div>
+            )}
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">

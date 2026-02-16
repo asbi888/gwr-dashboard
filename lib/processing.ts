@@ -1,4 +1,4 @@
-import type { Expense, Supplier, Revenue, RevenueLine } from './supabase';
+import type { Expense, Supplier, Revenue, RevenueLine, FoodUsage, DrinksUsage, WRRevenue } from './supabase';
 import type { DashboardData } from './data-context';
 import {
   resolvePresetToRange,
@@ -38,12 +38,20 @@ export function applyFilters(data: DashboardData, filters: DashboardFilters): Da
     suppliers: data.suppliers,
     revenue: filteredRevenue,
     revenueLines: filteredLines,
+    foodUsage: data.foodUsage,
+    drinksUsage: data.drinksUsage,
+    wrRevenue: data.wrRevenue,
   };
 }
 
 // ── Data processing helpers ──
 
-export function buildMonthlyChart(revenue: Revenue[], revenueLines: RevenueLine[], expenses: Expense[]) {
+export function buildMonthlyChart(
+  revenue: Revenue[],
+  revenueLines: RevenueLine[],
+  expenses: Expense[],
+  wrRevenue?: WRRevenue[],
+) {
   const revenueByOrder: Record<string, number> = {};
   revenueLines.forEach((line) => {
     revenueByOrder[line.revenue_id] = (revenueByOrder[line.revenue_id] || 0) + line.line_total;
@@ -53,6 +61,12 @@ export function buildMonthlyChart(revenue: Revenue[], revenueLines: RevenueLine[
   revenue.forEach((r) => {
     const key = r.revenue_date.substring(0, 7);
     revByMonth[key] = (revByMonth[key] || 0) + (revenueByOrder[r.revenue_id] || r.total_revenue);
+  });
+
+  // Include WR revenue in monthly totals
+  (wrRevenue || []).forEach((wr) => {
+    const key = wr.revenue_date.substring(0, 7);
+    revByMonth[key] = (revByMonth[key] || 0) + (wr.amount || 0);
   });
 
   const expByMonth: Record<string, number> = {};
@@ -155,14 +169,16 @@ export function buildMenuPerformance(revenueLines: RevenueLine[]) {
 }
 
 export function computeKPIs(data: DashboardData) {
-  const { expenses, revenue, revenueLines } = data;
+  const { expenses, revenue, revenueLines, wrRevenue } = data;
 
-  const totalRevenue = revenueLines.reduce((sum, l) => sum + l.line_total, 0);
+  const cateringRevenue = revenueLines.reduce((sum, l) => sum + l.line_total, 0);
+  const wrRevenueTotal = (wrRevenue || []).reduce((sum, w) => sum + (w.amount || 0), 0);
+  const totalRevenue = cateringRevenue + wrRevenueTotal;
   const totalExpenses = expenses.reduce((sum, e) => sum + e.total_amount, 0);
   const profitLoss = totalRevenue - totalExpenses;
   const profitMargin = totalRevenue > 0 ? (profitLoss / totalRevenue) * 100 : 0;
   const totalOrders = revenue.length;
-  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+  const avgOrderValue = totalOrders > 0 ? cateringRevenue / totalOrders : 0;
 
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -183,6 +199,13 @@ export function computeKPIs(data: DashboardData) {
     const rev = revenueByOrder[r.revenue_id] || r.total_revenue;
     if (m === currentMonth) { curMonthRev += rev; curMonthOrders++; }
     if (m === prevMonthKey) { prevMonthRev += rev; prevMonthOrders++; }
+  });
+
+  // Include WR revenue in monthly trends
+  (wrRevenue || []).forEach((wr) => {
+    const m = wr.revenue_date.substring(0, 7);
+    if (m === currentMonth) curMonthRev += wr.amount || 0;
+    if (m === prevMonthKey) prevMonthRev += wr.amount || 0;
   });
 
   expenses.forEach((e) => {
@@ -217,4 +240,175 @@ export function getUniqueSupplierNames(expenses: Expense[], suppliers: Supplier[
     if (name) names.add(name);
   });
   return Array.from(names).sort();
+}
+
+// ── Food expense classification (mirrors ETL CATEGORY_KEYWORDS) ──
+
+function classifyFoodExpense(expense: Expense): 'poulet' | 'langoustes' | 'poisson' | null {
+  const desc = (expense.description || '').toLowerCase();
+  const cat = (expense.category || '').toLowerCase();
+
+  if (cat.includes('poultry') || desc.includes('chicken') || desc.includes('poulet')) {
+    return 'poulet';
+  }
+  if (desc.includes('langouste') || desc.includes('lobster') || desc.includes('gambas')) {
+    return 'langoustes';
+  }
+  if (desc.includes('poisson') || desc.includes('fish')) {
+    return 'poisson';
+  }
+  if (cat.includes('seafood')) {
+    return 'poisson'; // Default seafood to poisson
+  }
+  return null;
+}
+
+// ── Inventory calculations ──
+
+export interface InventoryItem {
+  product: string;
+  productKey: 'poulet' | 'langoustes' | 'poisson';
+  purchased: number;
+  used: number;
+  onHand: number;
+  avgDailyUse: number;
+  daysSupply: number;
+  status: 'green' | 'yellow' | 'red';
+}
+
+export function computeInventory(expenses: Expense[], foodUsage: FoodUsage[]): InventoryItem[] {
+  // Sum purchased kg from expenses
+  const purchased = { poulet: 0, langoustes: 0, poisson: 0 };
+  expenses.forEach((e) => {
+    const product = classifyFoodExpense(e);
+    if (product && e.quantity && e.unit_of_measure === 'kg') {
+      purchased[product] += e.quantity;
+    }
+  });
+
+  // Sum used kg from food_usage
+  const used = {
+    poulet: foodUsage.reduce((s, f) => s + (f.poulet_kg || 0), 0),
+    langoustes: foodUsage.reduce((s, f) => s + (f.langoustes_kg || 0), 0),
+    poisson: foodUsage.reduce((s, f) => s + (f.poisson_kg || 0), 0),
+  };
+
+  const usageDays = new Set(foodUsage.map((f) => f.usage_date)).size || 1;
+
+  const products: { key: 'poulet' | 'langoustes' | 'poisson'; label: string }[] = [
+    { key: 'poulet', label: 'Chicken (Poulet)' },
+    { key: 'langoustes', label: 'Langoustes' },
+    { key: 'poisson', label: 'Fish (Poisson)' },
+  ];
+
+  return products.map(({ key, label }) => {
+    const onHand = purchased[key] - used[key];
+    const avgDaily = used[key] / usageDays;
+    const daysSupply = avgDaily > 0 ? Math.round(onHand / avgDaily) : (onHand > 0 ? 999 : 0);
+
+    let status: 'green' | 'yellow' | 'red';
+    if (onHand < 0 || daysSupply < 3) status = 'red';
+    else if (onHand < 100 || daysSupply < 7) status = 'yellow';
+    else status = 'green';
+
+    return {
+      product: label,
+      productKey: key,
+      purchased: purchased[key],
+      used: used[key],
+      onHand,
+      avgDailyUse: Math.round(avgDaily * 10) / 10,
+      daysSupply,
+      status,
+    };
+  });
+}
+
+// ── Food purchase vs usage chart ──
+
+export interface FoodChartPoint {
+  month: string;
+  purchasedPoulet: number;
+  usedPoulet: number;
+  purchasedLangoustes: number;
+  usedLangoustes: number;
+  purchasedPoisson: number;
+  usedPoisson: number;
+}
+
+export function buildFoodPurchaseVsUsage(
+  expenses: Expense[],
+  foodUsage: FoodUsage[],
+): FoodChartPoint[] {
+  const purchaseByMonth: Record<string, { poulet: number; langoustes: number; poisson: number }> = {};
+  expenses.forEach((e) => {
+    const product = classifyFoodExpense(e);
+    if (product && e.quantity && e.unit_of_measure === 'kg') {
+      const month = e.expense_date.substring(0, 7);
+      if (!purchaseByMonth[month]) purchaseByMonth[month] = { poulet: 0, langoustes: 0, poisson: 0 };
+      purchaseByMonth[month][product] += e.quantity;
+    }
+  });
+
+  const usageByMonth: Record<string, { poulet: number; langoustes: number; poisson: number }> = {};
+  foodUsage.forEach((f) => {
+    const month = f.usage_date.substring(0, 7);
+    if (!usageByMonth[month]) usageByMonth[month] = { poulet: 0, langoustes: 0, poisson: 0 };
+    usageByMonth[month].poulet += f.poulet_kg || 0;
+    usageByMonth[month].langoustes += f.langoustes_kg || 0;
+    usageByMonth[month].poisson += f.poisson_kg || 0;
+  });
+
+  const allMonths = [...new Set([...Object.keys(purchaseByMonth), ...Object.keys(usageByMonth)])].sort();
+
+  return allMonths.map((m) => ({
+    month: new Date(m + '-01').toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+    purchasedPoulet: Math.round(purchaseByMonth[m]?.poulet || 0),
+    usedPoulet: Math.round(usageByMonth[m]?.poulet || 0),
+    purchasedLangoustes: Math.round(purchaseByMonth[m]?.langoustes || 0),
+    usedLangoustes: Math.round(usageByMonth[m]?.langoustes || 0),
+    purchasedPoisson: Math.round(purchaseByMonth[m]?.poisson || 0),
+    usedPoisson: Math.round(usageByMonth[m]?.poisson || 0),
+  }));
+}
+
+// ── Drinks consumption ──
+
+export interface DrinksSummary {
+  name: string;
+  total: number;
+  color: string;
+}
+
+export function buildDrinksSummary(drinksUsage: DrinksUsage[]): DrinksSummary[] {
+  const totals = {
+    'Coca-Cola': 0,
+    'Sprite': 0,
+    'Beer': 0,
+    'Rhum': 0,
+    'Rose Wine': 0,
+    'Blanc Wine': 0,
+  };
+
+  drinksUsage.forEach((d) => {
+    totals['Coca-Cola'] += d.coca_cola_bottles || 0;
+    totals['Sprite'] += d.sprite_bottles || 0;
+    totals['Beer'] += d.beer_bottles || 0;
+    totals['Rhum'] += d.rhum_bottles || 0;
+    totals['Rose Wine'] += d.rose_bottles || 0;
+    totals['Blanc Wine'] += d.blanc_bottles || 0;
+  });
+
+  const colors: Record<string, string> = {
+    'Coca-Cola': '#FF6B6B',
+    'Beer': '#FFB547',
+    'Rhum': '#7B61FF',
+    'Rose Wine': '#D53F8C',
+    'Blanc Wine': '#4FD1C5',
+    'Sprite': '#38B2AC',
+  };
+
+  return Object.entries(totals)
+    .map(([name, total]) => ({ name, total, color: colors[name] || '#A0AEC0' }))
+    .sort((a, b) => b.total - a.total);
 }

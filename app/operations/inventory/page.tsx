@@ -1,0 +1,99 @@
+'use client';
+
+import PageShell from '@/components/PageShell';
+import InventoryAlertCard from '@/components/InventoryAlertCard';
+import FoodUsageChart from '@/components/FoodUsageChart';
+import DrinksChart from '@/components/DrinksChart';
+import InventoryTable from '@/components/InventoryTable';
+import {
+  computeInventory,
+  buildFoodPurchaseVsUsage,
+  buildDrinksSummary,
+} from '@/lib/processing';
+import { formatTimeAgo } from '@/lib/utils';
+
+export default function OperationsInventoryPage() {
+  return (
+    <PageShell
+      title="Operations - Inventory"
+      subtitle="Food &amp; beverage inventory status and usage analytics"
+      icon={
+        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+      }
+    >
+      {(data, lastRefreshed) => {
+        const inventory = computeInventory(data.expenses, data.foodUsage);
+        const foodChart = buildFoodPurchaseVsUsage(data.expenses, data.foodUsage);
+        const drinksSummary = buildDrinksSummary(data.drinksUsage);
+
+        const criticalCount = inventory.filter((i) => i.status === 'red').length;
+
+        return (
+          <>
+            {/* Status summary bar */}
+            <div className="animate-fade-in-up opacity-0 delay-100 mb-6">
+              <div className="bg-white rounded-2xl px-5 py-4 shadow-lg shadow-gray-200/50">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    {criticalCount > 0 ? (
+                      <>
+                        <span className="w-2 h-2 rounded-full bg-accent-red animate-pulse" />
+                        <span className="text-xs font-semibold text-accent-red">
+                          {criticalCount} critical alert{criticalCount > 1 ? 's' : ''}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                        <span className="text-xs font-semibold text-success">All stock levels healthy</span>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 sm:ml-auto">
+                    {lastRefreshed && (
+                      <span className="text-[10px] text-gray-400 whitespace-nowrap">
+                        Updated {formatTimeAgo(lastRefreshed)}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                      <span className="text-[10px] text-gray-400">Live</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Inventory Alert Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
+              {inventory.map((item, i) => (
+                <InventoryAlertCard
+                  key={item.productKey}
+                  item={item}
+                  delay={`delay-${(i + 1) * 100}`}
+                />
+              ))}
+            </div>
+
+            {/* Charts: Food Purchase vs Usage + Drinks */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+              <div className="animate-fade-in-up opacity-0 delay-300">
+                <FoodUsageChart data={foodChart} />
+              </div>
+              <div className="animate-fade-in-up opacity-0 delay-400">
+                <DrinksChart data={drinksSummary} />
+              </div>
+            </div>
+
+            {/* Full Inventory Table */}
+            <div className="animate-fade-in-up opacity-0 delay-500">
+              <InventoryTable data={inventory} />
+            </div>
+          </>
+        );
+      }}
+    </PageShell>
+  );
+}

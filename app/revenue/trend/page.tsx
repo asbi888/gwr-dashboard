@@ -25,7 +25,7 @@ export default function RevenueTrendPage() {
         const clientNames = getUniqueClientNames(data.revenue);
         const filtered = applyFilters(data, filters);
         const kpis = computeKPIs(filtered);
-        const monthlyChart = buildMonthlyChart(filtered.revenue, filtered.revenueLines, filtered.expenses);
+        const monthlyChart = buildMonthlyChart(filtered.revenue, filtered.revenueLines, filtered.expenses, data.wrRevenue);
 
         // Monthly averages
         const months = monthlyChart.length || 1;

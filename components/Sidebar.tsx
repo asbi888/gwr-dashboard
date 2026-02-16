@@ -57,6 +57,18 @@ const NAV_ITEMS: NavItem[] = [
       { label: 'All Transactions', href: '/expenses/transactions' },
     ],
   },
+  {
+    id: 'operations',
+    label: 'Operations',
+    icon: (
+      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+      </svg>
+    ),
+    children: [
+      { label: 'Inventory', href: '/operations/inventory' },
+    ],
+  },
 ];
 
 interface SidebarProps {
@@ -69,6 +81,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     revenue: true,
     expenses: true,
+    operations: true,
   });
 
   const isActive = (href: string) => pathname === href;
