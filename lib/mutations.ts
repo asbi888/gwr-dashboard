@@ -42,12 +42,13 @@ export async function updateFoodUsage(
 }
 
 export async function deleteFoodUsage(staging_id: number): Promise<void> {
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from('gwr_food_usage')
-    .delete()
+    .delete({ count: 'exact' })
     .eq('staging_id', staging_id);
 
   if (error) throw error;
+  if (count === 0) throw new Error('Delete failed — record not found or permission denied');
 }
 
 // ── Drinks Usage CRUD ──
@@ -101,12 +102,13 @@ export async function updateDrinksUsage(
 }
 
 export async function deleteDrinksUsage(staging_id: number): Promise<void> {
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from('gwr_drinks_usage')
-    .delete()
+    .delete({ count: 'exact' })
     .eq('staging_id', staging_id);
 
   if (error) throw error;
+  if (count === 0) throw new Error('Delete failed — record not found or permission denied');
 }
 
 // ── WR Revenue CRUD ──
@@ -140,12 +142,13 @@ export async function updateWRRevenue(
 }
 
 export async function deleteWRRevenue(staging_id: number): Promise<void> {
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from('gwr_wr_revenue')
-    .delete()
+    .delete({ count: 'exact' })
     .eq('staging_id', staging_id);
 
   if (error) throw error;
+  if (count === 0) throw new Error('Delete failed — record not found or permission denied');
 }
 
 // ── Expenses CRUD ──
@@ -193,12 +196,13 @@ export async function updateExpense(
 }
 
 export async function deleteExpense(expense_id: string): Promise<void> {
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from('gwr_expenses')
-    .delete()
+    .delete({ count: 'exact' })
     .eq('expense_id', expense_id);
 
   if (error) throw error;
+  if (count === 0) throw new Error('Delete failed — record not found or permission denied');
 }
 
 // ── Revenue CRUD (parent + lines) ──
@@ -254,7 +258,7 @@ export async function updateRevenue(
 }
 
 export async function deleteRevenue(revenue_id: string): Promise<void> {
-  // Delete lines first
+  // Delete lines first (count may be 0 if no lines exist — that's OK)
   const { error: lineErr } = await supabase
     .from('gwr_revenue_lines')
     .delete()
@@ -263,12 +267,13 @@ export async function deleteRevenue(revenue_id: string): Promise<void> {
   if (lineErr) throw lineErr;
 
   // Delete header
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from('gwr_revenue')
-    .delete()
+    .delete({ count: 'exact' })
     .eq('revenue_id', revenue_id);
 
   if (error) throw error;
+  if (count === 0) throw new Error('Delete failed — record not found or permission denied');
 }
 
 // ── Revenue Lines CRUD ──
@@ -310,10 +315,11 @@ export async function updateRevenueLine(
 }
 
 export async function deleteRevenueLine(line_id: string): Promise<void> {
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from('gwr_revenue_lines')
-    .delete()
+    .delete({ count: 'exact' })
     .eq('line_id', line_id);
 
   if (error) throw error;
+  if (count === 0) throw new Error('Delete failed — record not found or permission denied');
 }
