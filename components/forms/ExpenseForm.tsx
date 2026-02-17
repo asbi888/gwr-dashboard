@@ -18,8 +18,9 @@ interface ExpenseFormProps {
 }
 
 const CATEGORIES = [
-  'Food-Poultry', 'Food-Seafood', 'Beverage-Alcoholic', 'Beverage-Soft',
-  'Cleaning', 'Fuel', 'Equipment', 'Maintenance', 'Office', 'Transport', 'General',
+  'Beer & Soft Drinks', 'Boat Rent', 'Camera Installation', 'Chicken',
+  'Detergents', 'Equipments', 'Fish', 'Fuel', 'Ingredients', 'Lobster',
+  'Other', 'Refund', 'Renovation', 'Salaries & Labor', 'Wine & Rhum',
 ];
 
 const UNITS = ['kg', 'pcs', 'bottles', 'litres', 'units'];
@@ -33,7 +34,7 @@ export default function ExpenseForm({ initialData, supplierSuggestions = [], onS
   const [form, setForm] = useState({
     expense_date: initialData?.expense_date ?? new Date().toISOString().split('T')[0],
     description: initialData?.description ?? '',
-    category: initialData?.category ?? 'General',
+    category: initialData?.category ?? 'Other',
     quantity: initialData?.quantity ?? 0,
     unit_of_measure: initialData?.unit_of_measure ?? 'kg',
     net_amount: initialData?.net_amount ?? 0,

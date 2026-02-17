@@ -84,7 +84,7 @@ export default function ExpenseDetailTable({ expenses, suppliers, onEdit, onDele
   }
 
   function SortIcon({ field }: { field: SortField }) {
-    if (sortField !== field) return <span className="text-gray-300 ml-0.5">&udarr;</span>;
+    if (sortField !== field) return <span className="text-gray-300 ml-0.5">{'\u2195'}</span>;
     return (
       <span className="text-primary ml-0.5">
         {sortDir === 'asc' ? '\u2191' : '\u2193'}
