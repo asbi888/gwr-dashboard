@@ -6,6 +6,7 @@ import { insertExpense, updateExpense } from '@/lib/mutations';
 import { useDashboardData } from '@/lib/data-context';
 import { useToast } from '@/components/ui/Toast';
 import FormField, { inputClass, selectClass } from '@/components/ui/FormField';
+import AutocompleteInput from '@/components/ui/AutocompleteInput';
 
 interface ExpenseFormProps {
   initialData?: Expense;
@@ -27,6 +28,14 @@ export default function ExpenseForm({ initialData, suppliers, onSave, onCancel }
   const { toast } = useToast();
   const isEdit = !!initialData;
 
+  // Build supplier name suggestions (sorted A-Z)
+  const supplierNames = [...new Set(suppliers.map((s) => s.standard_name).filter(Boolean))].sort();
+
+  // Resolve initial supplier name from key
+  const initialSupplierName = initialData
+    ? (suppliers.find((s) => s.supplier_key === initialData.supplier_key)?.standard_name ?? '')
+    : '';
+
   const [form, setForm] = useState({
     expense_date: initialData?.expense_date ?? new Date().toISOString().split('T')[0],
     description: initialData?.description ?? '',
@@ -35,7 +44,7 @@ export default function ExpenseForm({ initialData, suppliers, onSave, onCancel }
     unit_of_measure: initialData?.unit_of_measure ?? 'kg',
     net_amount: initialData?.net_amount ?? 0,
     vat_amount: initialData?.vat_amount ?? 0,
-    supplier_key: initialData?.supplier_key ?? (suppliers[0]?.supplier_key ?? 0),
+    supplier_name: initialSupplierName,
     payment_method: initialData?.payment_method ?? 'Cash',
     invoice_number: initialData?.invoice_number ?? '',
   });
@@ -50,7 +59,7 @@ export default function ExpenseForm({ initialData, suppliers, onSave, onCancel }
     if (!form.expense_date) e.expense_date = 'Date is required';
     if (!form.description.trim()) e.description = 'Description is required';
     if (form.net_amount < 0) e.net_amount = 'Must be 0 or greater';
-    if (!form.supplier_key) e.supplier_key = 'Supplier is required';
+    if (!form.supplier_name.trim()) e.supplier_name = 'Supplier is required';
     return e;
   }
 
@@ -62,8 +71,16 @@ export default function ExpenseForm({ initialData, suppliers, onSave, onCancel }
 
     setSaving(true);
     try {
+      // Resolve supplier_key from name (0 if new supplier not in list)
+      const matchedSupplier = suppliers.find(
+        (s) => s.standard_name.toLowerCase() === form.supplier_name.trim().toLowerCase(),
+      );
+      const supplier_key = matchedSupplier?.supplier_key ?? 0;
+
+      const { supplier_name: _name, ...rest } = form;
       const payload = {
-        ...form,
+        ...rest,
+        supplier_key,
         total_amount: totalAmount,
       };
       if (isEdit) {
@@ -131,17 +148,13 @@ export default function ExpenseForm({ initialData, suppliers, onSave, onCancel }
             ))}
           </select>
         </FormField>
-        <FormField label="Supplier" required error={errors.supplier_key}>
-          <select
-            value={form.supplier_key}
-            onChange={(e) => setField('supplier_key', parseInt(e.target.value))}
-            className={selectClass}
-          >
-            <option value={0}>Select supplier...</option>
-            {suppliers.map((s) => (
-              <option key={s.supplier_key} value={s.supplier_key}>{s.standard_name}</option>
-            ))}
-          </select>
+        <FormField label="Supplier" required error={errors.supplier_name}>
+          <AutocompleteInput
+            value={form.supplier_name}
+            onChange={(v) => setField('supplier_name', v)}
+            suggestions={supplierNames}
+            placeholder="e.g. K. Nepaulsing & Co Ltd"
+          />
         </FormField>
       </div>
 
