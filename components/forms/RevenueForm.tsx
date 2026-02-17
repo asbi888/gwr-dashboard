@@ -5,7 +5,18 @@ import type { Revenue, RevenueLine } from '@/lib/supabase';
 import { insertRevenue, updateRevenue, insertRevenueLine, updateRevenueLine, deleteRevenueLine } from '@/lib/mutations';
 import { useDashboardData } from '@/lib/data-context';
 import { useToast } from '@/components/ui/Toast';
-import FormField, { inputClass } from '@/components/ui/FormField';
+import FormField, { inputClass, selectClass } from '@/components/ui/FormField';
+
+const MENU_ITEMS = [
+  'Gambass',
+  'Langouste',
+  'Normal',
+  'Enf-Normal',
+  'Veg',
+  'Fish',
+  'Cake',
+  'Menu VIP',
+];
 
 interface LineItem {
   localId: string;
@@ -203,13 +214,16 @@ export default function RevenueForm({ initialData, initialLines, onSave, onCance
         {lines.map((line, i) => (
           <div key={line.localId} className="flex items-start gap-2 bg-gray-50 rounded-xl p-3">
             <div className="flex-[3] min-w-0">
-              <input
-                type="text"
+              <select
                 value={line.menu_item}
                 onChange={(e) => updateLine(line.localId, 'menu_item', e.target.value)}
-                placeholder="Menu item"
-                className={`${inputClass} ${errors[`line_${i}_item`] ? 'border-accent-red' : ''}`}
-              />
+                className={`${selectClass} ${errors[`line_${i}_item`] ? 'border-accent-red' : ''}`}
+              >
+                <option value="" disabled>Select menu item</option>
+                {MENU_ITEMS.map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
             </div>
             <div className="flex-[1]">
               <input
