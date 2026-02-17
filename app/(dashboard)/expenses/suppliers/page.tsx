@@ -63,7 +63,7 @@ export default function ExpensesSuppliersPage() {
         let displayedExpenses = filteredExpenses;
         if (selectedSupplier) {
           displayedExpenses = filteredExpenses.filter(
-            (e) => supplierLookup[e.supplier_key] === selectedSupplier
+            (e) => (e.supplier_name?.trim() || supplierLookup[e.supplier_key]) === selectedSupplier
           );
         }
 

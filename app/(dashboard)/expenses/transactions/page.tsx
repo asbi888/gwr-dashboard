@@ -71,11 +71,11 @@ export default function AllTransactionsPage() {
         data.suppliers.forEach((s) => { supplierLookup[s.supplier_key] = s.standard_name; });
         const supplierNames = getUniqueSupplierNames(filteredExpenses, data.suppliers);
 
-        // Filter by supplier
+        // Filter by supplier (use supplier_name field, fall back to supplier_key lookup)
         let displayedExpenses = filteredExpenses;
         if (selectedSupplier) {
           displayedExpenses = filteredExpenses.filter(
-            (e) => supplierLookup[e.supplier_key] === selectedSupplier
+            (e) => (e.supplier_name?.trim() || supplierLookup[e.supplier_key]) === selectedSupplier
           );
         }
 

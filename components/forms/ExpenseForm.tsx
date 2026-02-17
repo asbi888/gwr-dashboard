@@ -1,15 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { Expense } from '@/lib/supabase';
 import { insertExpense, updateExpense } from '@/lib/mutations';
 import { useDashboardData } from '@/lib/data-context';
 import { useToast } from '@/components/ui/Toast';
 import FormField, { inputClass, selectClass } from '@/components/ui/FormField';
 import AutocompleteInput from '@/components/ui/AutocompleteInput';
+import { findSupplierMatches, resolveSupplierName } from '@/lib/supplier-master';
 
 interface ExpenseFormProps {
   initialData?: Expense;
+  /** Historical supplier names from existing expense records */
   supplierSuggestions?: string[];
   onSave: () => void;
   onCancel: () => void;
@@ -46,6 +48,11 @@ export default function ExpenseForm({ initialData, supplierSuggestions = [], onS
 
   const totalAmount = (form.net_amount || 0) + (form.vat_amount || 0);
 
+  // Build rich suggestions: merge master list (with aliases) + historical names
+  const supplierRichSuggestions = useMemo(() => {
+    return findSupplierMatches(form.supplier_name, supplierSuggestions);
+  }, [form.supplier_name, supplierSuggestions]);
+
   function validate() {
     const e: Record<string, string> = {};
     if (!form.expense_date) e.expense_date = 'Date is required';
@@ -63,9 +70,11 @@ export default function ExpenseForm({ initialData, supplierSuggestions = [], onS
 
     setSaving(true);
     try {
+      // Resolve alias to standard name at save time
+      const resolvedName = resolveSupplierName(form.supplier_name);
       const payload = {
         ...form,
-        supplier_name: form.supplier_name.trim(),
+        supplier_name: resolvedName,
         supplier_key: 0,
         total_amount: totalAmount,
       };
@@ -138,8 +147,12 @@ export default function ExpenseForm({ initialData, supplierSuggestions = [], onS
           <AutocompleteInput
             value={form.supplier_name}
             onChange={(v) => setField('supplier_name', v)}
-            suggestions={supplierSuggestions}
-            placeholder="e.g. K. Nepaulsing & Co Ltd"
+            richSuggestions={supplierRichSuggestions.map((m) => ({
+              display: m.display,
+              value: m.standardName,
+            }))}
+            placeholder="Type supplier name or alias..."
+            onBlurResolve={resolveSupplierName}
           />
         </FormField>
       </div>

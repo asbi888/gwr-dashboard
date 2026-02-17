@@ -137,20 +137,22 @@ export function buildTopClients(revenue: Revenue[], revenueLines: RevenueLine[],
 }
 
 export function buildTopSuppliers(expenses: Expense[], suppliers: Supplier[], limit = 5) {
-  const supplierMap: Record<number, { total: number }> = {};
-  expenses.forEach((e) => {
-    if (!supplierMap[e.supplier_key]) supplierMap[e.supplier_key] = { total: 0 };
-    supplierMap[e.supplier_key].total += e.total_amount;
-  });
-
+  // Build lookup from supplier_key for legacy records
   const supplierLookup: Record<number, Supplier> = {};
   suppliers.forEach((s) => { supplierLookup[s.supplier_key] = s; });
 
-  return Object.entries(supplierMap)
-    .map(([key, d]) => {
-      const sup = supplierLookup[Number(key)];
-      return { name: sup?.standard_name || `Supplier ${key}`, category: sup?.category || 'General', total: d.total };
-    })
+  // Group by supplier name (prefer supplier_name field, fall back to key lookup)
+  const nameMap: Record<string, { total: number; category: string }> = {};
+  expenses.forEach((e) => {
+    const sup = supplierLookup[e.supplier_key];
+    const name = e.supplier_name?.trim() || sup?.standard_name || `Supplier ${e.supplier_key}`;
+    const category = sup?.category || 'General';
+    if (!nameMap[name]) nameMap[name] = { total: 0, category };
+    nameMap[name].total += e.total_amount;
+  });
+
+  return Object.entries(nameMap)
+    .map(([name, d]) => ({ name, category: d.category, total: d.total }))
     .sort((a, b) => b.total - a.total)
     .slice(0, limit);
 }
@@ -232,11 +234,14 @@ export function getUniqueClientNames(revenue: Revenue[]): string[] {
 }
 
 export function getUniqueSupplierNames(expenses: Expense[], suppliers: Supplier[]): string[] {
+  // Build lookup from supplier_key for legacy records
   const lookup: Record<number, string> = {};
   suppliers.forEach((s) => { lookup[s.supplier_key] = s.standard_name; });
+
   const names = new Set<string>();
   expenses.forEach((e) => {
-    const name = lookup[e.supplier_key];
+    // Prefer supplier_name (new field), fall back to supplier_key lookup
+    const name = e.supplier_name?.trim() || lookup[e.supplier_key];
     if (name) names.add(name);
   });
   return Array.from(names).sort();

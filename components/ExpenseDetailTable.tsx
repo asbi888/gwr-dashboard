@@ -42,7 +42,7 @@ export default function ExpenseDetailTable({ expenses, suppliers, onEdit, onDele
           cmp = a.expense_date.localeCompare(b.expense_date);
           break;
         case 'supplier':
-          cmp = (supplierLookup[a.supplier_key] || '').localeCompare(supplierLookup[b.supplier_key] || '');
+          cmp = (a.supplier_name || supplierLookup[a.supplier_key] || '').localeCompare(b.supplier_name || supplierLookup[b.supplier_key] || '');
           break;
         case 'description':
           cmp = (a.description || '').localeCompare(b.description || '');
@@ -149,7 +149,7 @@ export default function ExpenseDetailTable({ expenses, suppliers, onEdit, onDele
                       {formatDate(expense.expense_date)}
                     </td>
                     <td className="py-3 pr-3 text-xs font-medium text-navy max-w-[140px] truncate">
-                      {supplierLookup[expense.supplier_key] || `#${expense.supplier_key}`}
+                      {expense.supplier_name || supplierLookup[expense.supplier_key] || `#${expense.supplier_key}`}
                     </td>
                     <td className="py-3 pr-3 text-xs text-gray-600 max-w-[160px] truncate">
                       {expense.description}
