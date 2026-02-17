@@ -103,7 +103,11 @@ export default function DataEntryPage() {
         </svg>
       }
     >
-      {(data) => (
+      {(data) => {
+        // Unique client names from existing revenue records (sorted A-Z)
+        const revenueClients = [...new Set(data.revenue.map((r) => r.client_name).filter(Boolean))].sort();
+
+        return (
         <>
           {/* Tab Bar */}
           <div className="animate-fade-in-up opacity-0 delay-100 mb-6">
@@ -197,7 +201,7 @@ export default function DataEntryPage() {
               <div className="space-y-6">
                 <div className="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50">
                   <h3 className="text-sm font-bold text-navy mb-4">Add Revenue Order</h3>
-                  <RevenueForm onSave={() => {}} onCancel={() => {}} />
+                  <RevenueForm clientSuggestions={revenueClients} onSave={() => {}} onCancel={() => {}} />
                 </div>
                 <RecentTable
                   title="Recent Revenue Orders"
@@ -287,6 +291,7 @@ export default function DataEntryPage() {
               <RevenueForm
                 initialData={editItem as Revenue}
                 initialLines={data.revenueLines.filter((l) => l.revenue_id === (editItem as Revenue).revenue_id)}
+                clientSuggestions={revenueClients}
                 onSave={() => setEditItem(null)}
                 onCancel={() => setEditItem(null)}
               />
@@ -303,7 +308,8 @@ export default function DataEntryPage() {
             variant="danger"
           />
         </>
-      )}
+        );
+      }}
     </PageShell>
   );
 }

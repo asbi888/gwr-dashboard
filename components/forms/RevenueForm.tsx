@@ -6,6 +6,7 @@ import { insertRevenue, updateRevenue, insertRevenueLine, updateRevenueLine, del
 import { useDashboardData } from '@/lib/data-context';
 import { useToast } from '@/components/ui/Toast';
 import FormField, { inputClass, selectClass } from '@/components/ui/FormField';
+import AutocompleteInput from '@/components/ui/AutocompleteInput';
 
 const MENU_ITEMS = [
   'Gambass',
@@ -29,11 +30,12 @@ interface LineItem {
 interface RevenueFormProps {
   initialData?: Revenue;
   initialLines?: RevenueLine[];
+  clientSuggestions?: string[];
   onSave: () => void;
   onCancel: () => void;
 }
 
-export default function RevenueForm({ initialData, initialLines, onSave, onCancel }: RevenueFormProps) {
+export default function RevenueForm({ initialData, initialLines, clientSuggestions = [], onSave, onCancel }: RevenueFormProps) {
   const { refresh } = useDashboardData();
   const { toast } = useToast();
   const isEdit = !!initialData;
@@ -170,12 +172,11 @@ export default function RevenueForm({ initialData, initialLines, onSave, onCance
           />
         </FormField>
         <FormField label="Client Name" required error={errors.client_name}>
-          <input
-            type="text"
+          <AutocompleteInput
             value={form.client_name}
-            onChange={(e) => setField('client_name', e.target.value)}
+            onChange={(v) => setField('client_name', v)}
+            suggestions={clientSuggestions}
             placeholder="e.g. ANAHITA"
-            className={inputClass}
           />
         </FormField>
         <FormField label="Pax Count" required error={errors.pax_count}>
