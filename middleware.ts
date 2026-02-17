@@ -17,12 +17,15 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Refresh session (important for cookie persistence)
+  // Validate session and refresh token if expired
+  // IMPORTANT: getUser() contacts the auth server and refreshes expired tokens.
+  // getSession() only reads the JWT from cookies without refreshing — causes
+  // "app won't load on refresh" when the access token has expired.
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirectTo', pathname);
     return NextResponse.redirect(loginUrl);
