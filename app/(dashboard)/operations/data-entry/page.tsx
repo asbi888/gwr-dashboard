@@ -106,6 +106,8 @@ export default function DataEntryPage() {
       {(data) => {
         // Unique client names from existing revenue records (sorted A-Z)
         const revenueClients = [...new Set(data.revenue.map((r) => r.client_name).filter(Boolean))].sort();
+        // Unique supplier names from existing expenses (sorted A-Z)
+        const expenseSuppliers = [...new Set(data.expenses.map((r) => r.supplier_name).filter(Boolean))].sort();
 
         return (
         <>
@@ -181,7 +183,7 @@ export default function DataEntryPage() {
               <div className="space-y-6">
                 <div className="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50">
                   <h3 className="text-sm font-bold text-navy mb-4">Add Expense</h3>
-                  <ExpenseForm suppliers={data.suppliers} onSave={() => {}} onCancel={() => {}} />
+                  <ExpenseForm supplierSuggestions={expenseSuppliers} onSave={() => {}} onCancel={() => {}} />
                 </div>
                 <RecentTable
                   title="Recent Expenses"
@@ -273,7 +275,7 @@ export default function DataEntryPage() {
             {editItem && activeTab === 'expenses' && (
               <ExpenseForm
                 initialData={editItem as Expense}
-                suppliers={data.suppliers}
+                supplierSuggestions={expenseSuppliers}
                 onSave={() => setEditItem(null)}
                 onCancel={() => setEditItem(null)}
               />

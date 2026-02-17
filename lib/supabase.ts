@@ -18,6 +18,7 @@ export interface Expense {
   vat_amount: number;
   total_amount: number;
   supplier_key: number;
+  supplier_name: string;
   payment_method: string;
   invoice_number: string;
 }
@@ -80,7 +81,7 @@ export interface WRRevenue {
 
 export async function fetchDashboardData() {
   const [expRes, supRes, revRes, lineRes, foodRes, drinksRes, wrRevRes] = await Promise.all([
-    supabase.from('gwr_expenses').select('expense_id,expense_date,description,category,quantity,unit_of_measure,net_amount,vat_amount,total_amount,supplier_key,payment_method,invoice_number').order('expense_date', { ascending: false }),
+    supabase.from('gwr_expenses').select('expense_id,expense_date,description,category,quantity,unit_of_measure,net_amount,vat_amount,total_amount,supplier_key,supplier_name,payment_method,invoice_number').order('expense_date', { ascending: false }),
     supabase.from('gwr_suppliers').select('supplier_key,standard_name,category'),
     supabase.from('gwr_revenue').select('revenue_id,revenue_date,client_name,pax_count,total_revenue').order('revenue_date', { ascending: false }),
     supabase.from('gwr_revenue_lines').select('line_id,revenue_id,menu_item,quantity,unit_price,line_total'),

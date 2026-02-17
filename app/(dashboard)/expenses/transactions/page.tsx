@@ -294,7 +294,7 @@ export default function AllTransactionsPage() {
             {/* Add Expense Modal */}
             <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Add Expense" size="lg">
               <ExpenseForm
-                suppliers={data.suppliers}
+                supplierSuggestions={supplierNames}
                 onSave={() => setShowAddModal(false)}
                 onCancel={() => setShowAddModal(false)}
               />
@@ -305,7 +305,7 @@ export default function AllTransactionsPage() {
               {editingExpense && (
                 <ExpenseForm
                   initialData={editingExpense}
-                  suppliers={data.suppliers}
+                  supplierSuggestions={supplierNames}
                   onSave={() => setEditingExpense(null)}
                   onCancel={() => setEditingExpense(null)}
                 />
