@@ -156,9 +156,13 @@ export async function insertExpense(
   const expense_id = crypto.randomUUID();
   const total_amount = (data.net_amount || 0) + (data.vat_amount || 0);
 
+  // Exclude supplier_key to avoid FK constraint — we use supplier_name instead
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { supplier_key: _sk, ...rest } = data;
+
   const { data: result, error } = await supabase
     .from('gwr_expenses')
-    .insert({ ...data, expense_id, total_amount })
+    .insert({ ...rest, expense_id, total_amount })
     .select()
     .single();
 
@@ -170,7 +174,9 @@ export async function updateExpense(
   expense_id: string,
   data: Partial<Omit<Expense, 'expense_id'>>,
 ): Promise<Expense> {
-  const payload: Record<string, unknown> = { ...data };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { supplier_key: _sk, ...rest } = data;
+  const payload: Record<string, unknown> = { ...rest };
   if ('net_amount' in data || 'vat_amount' in data) {
     payload.total_amount = (data.net_amount ?? 0) + (data.vat_amount ?? 0);
   }
