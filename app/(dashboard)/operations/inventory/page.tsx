@@ -14,11 +14,23 @@ import {
   buildFoodPurchaseVsUsage,
   buildDrinksSummary,
 } from '@/lib/processing';
-import { formatTimeAgo } from '@/lib/utils';
+import { formatTimeAgo, resolvePresetToRange, type DatePreset } from '@/lib/utils';
+
+const DATE_PRESETS: { value: DatePreset; label: string }[] = [
+  { value: 'this_month', label: 'This Month' },
+  { value: 'last_month', label: 'Last Month' },
+  { value: 'last_3_months', label: 'Last 3 Months' },
+  { value: 'all_time', label: 'All Time' },
+  { value: 'custom', label: 'Custom' },
+];
 
 export default function OperationsInventoryPage() {
   const [showFoodModal, setShowFoodModal] = useState(false);
   const [showDrinksModal, setShowDrinksModal] = useState(false);
+  const [datePreset, setDatePreset] = useState<DatePreset>('all_time');
+  const [dateRange, setDateRange] = useState<{ from: string | null; to: string | null }>({ from: null, to: null });
+
+  const hasActiveFilters = datePreset !== 'all_time';
 
   return (
     <PageShell
@@ -31,18 +43,37 @@ export default function OperationsInventoryPage() {
       }
     >
       {(data, lastRefreshed) => {
-        const inventory = computeInventory(data.expenses, data.foodUsage);
-        const foodChart = buildFoodPurchaseVsUsage(data.expenses, data.foodUsage);
-        const drinksSummary = buildDrinksSummary(data.drinksUsage);
+        // Apply date filter to all data sources
+        const resolved = resolvePresetToRange(datePreset, dateRange);
+
+        let filteredExpenses = data.expenses;
+        let filteredFoodUsage = data.foodUsage;
+        let filteredDrinksUsage = data.drinksUsage;
+
+        if (resolved.from) {
+          filteredExpenses = filteredExpenses.filter((e) => e.expense_date >= resolved.from!);
+          filteredFoodUsage = filteredFoodUsage.filter((f) => f.usage_date >= resolved.from!);
+          filteredDrinksUsage = filteredDrinksUsage.filter((d) => d.usage_date >= resolved.from!);
+        }
+        if (resolved.to) {
+          filteredExpenses = filteredExpenses.filter((e) => e.expense_date <= resolved.to!);
+          filteredFoodUsage = filteredFoodUsage.filter((f) => f.usage_date <= resolved.to!);
+          filteredDrinksUsage = filteredDrinksUsage.filter((d) => d.usage_date <= resolved.to!);
+        }
+
+        const inventory = computeInventory(filteredExpenses, filteredFoodUsage);
+        const foodChart = buildFoodPurchaseVsUsage(filteredExpenses, filteredFoodUsage);
+        const drinksSummary = buildDrinksSummary(filteredDrinksUsage);
 
         const criticalCount = inventory.filter((i) => i.status === 'red').length;
 
         return (
           <>
-            {/* Status summary bar */}
+            {/* Status summary bar with period filter */}
             <div className="animate-fade-in-up opacity-0 delay-100 mb-6">
               <div className="bg-white rounded-2xl px-5 py-4 shadow-lg shadow-gray-200/50">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                  {/* Alert indicator */}
                   <div className="flex items-center gap-2">
                     {criticalCount > 0 ? (
                       <>
@@ -58,8 +89,51 @@ export default function OperationsInventoryPage() {
                       </>
                     )}
                   </div>
-                  <div className="flex items-center gap-3 sm:ml-auto">
-                    {/* Quick action buttons */}
+
+                  {/* Period Filter */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mr-1">Period</span>
+                    <div className="flex items-center bg-gray-50 rounded-xl p-1 gap-0.5">
+                      {DATE_PRESETS.map((preset) => (
+                        <button
+                          key={preset.value}
+                          onClick={() => {
+                            setDatePreset(preset.value);
+                            if (preset.value !== 'custom') setDateRange({ from: null, to: null });
+                          }}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap ${
+                            datePreset === preset.value
+                              ? 'bg-primary text-white shadow-sm'
+                              : 'text-gray-500 hover:text-primary hover:bg-white'
+                          }`}
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom Date Inputs */}
+                  {datePreset === 'custom' && (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="date"
+                        value={dateRange.from || ''}
+                        onChange={(e) => setDateRange({ ...dateRange, from: e.target.value || null })}
+                        className="px-3 py-1.5 rounded-xl border border-gray-200 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white transition-all"
+                      />
+                      <span className="text-xs text-gray-400">to</span>
+                      <input
+                        type="date"
+                        value={dateRange.to || ''}
+                        onChange={(e) => setDateRange({ ...dateRange, to: e.target.value || null })}
+                        className="px-3 py-1.5 rounded-xl border border-gray-200 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white transition-all"
+                      />
+                    </div>
+                  )}
+
+                  {/* Actions + Clear + Live */}
+                  <div className="flex items-center gap-3 lg:ml-auto">
                     <button
                       onClick={() => setShowFoodModal(true)}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-white text-[10px] font-medium hover:bg-primary-dark transition-colors"
@@ -78,6 +152,18 @@ export default function OperationsInventoryPage() {
                       </svg>
                       Log Drinks
                     </button>
+
+                    {hasActiveFilters && (
+                      <button
+                        onClick={() => { setDatePreset('all_time'); setDateRange({ from: null, to: null }); }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-medium text-accent-red hover:bg-red-50 transition-colors"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Clear
+                      </button>
+                    )}
 
                     {lastRefreshed && (
                       <span className="text-[10px] text-gray-400 whitespace-nowrap">
