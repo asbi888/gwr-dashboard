@@ -47,7 +47,7 @@ export function computeDailyFoodCosts(
 
   expenses.forEach((e) => {
     const product = classifyFoodExpense(e);
-    if (product && e.quantity && e.quantity > 0 && e.unit_of_measure === 'kg') {
+    if (product && e.quantity && e.quantity > 0 && (e.unit_of_measure || '').toLowerCase() === 'kg') {
       sums[product].amount += e.net_amount;
       sums[product].kg += e.quantity;
     }

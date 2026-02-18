@@ -286,7 +286,7 @@ export function computeInventory(expenses: Expense[], foodUsage: FoodUsage[]): I
   const purchased = { poulet: 0, langoustes: 0, poisson: 0 };
   expenses.forEach((e) => {
     const product = classifyFoodExpense(e);
-    if (product && e.quantity && e.unit_of_measure === 'kg') {
+    if (product && e.quantity && (e.unit_of_measure || '').toLowerCase() === 'kg') {
       purchased[product] += e.quantity;
     }
   });
@@ -348,7 +348,7 @@ export function buildFoodPurchaseVsUsage(
   const purchaseByMonth: Record<string, { poulet: number; langoustes: number; poisson: number }> = {};
   expenses.forEach((e) => {
     const product = classifyFoodExpense(e);
-    if (product && e.quantity && e.unit_of_measure === 'kg') {
+    if (product && e.quantity && (e.unit_of_measure || '').toLowerCase() === 'kg') {
       const month = e.expense_date.substring(0, 7);
       if (!purchaseByMonth[month]) purchaseByMonth[month] = { poulet: 0, langoustes: 0, poisson: 0 };
       purchaseByMonth[month][product] += e.quantity;
