@@ -28,7 +28,7 @@ const KPI_CONFIG = [
 ];
 
 export default function FoodCostPage() {
-  const [datePreset, setDatePreset] = useState<DatePreset>('this_month');
+  const [datePreset, setDatePreset] = useState<DatePreset>('all_time');
   const [dateRange, setDateRange] = useState<{ from: string | null; to: string | null }>({ from: null, to: null });
 
   const hasActiveFilters = datePreset !== 'all_time';
