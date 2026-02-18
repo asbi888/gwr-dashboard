@@ -144,7 +144,6 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
           />
           <div className="min-w-0">
             <h1 className="text-sm font-bold text-navy leading-tight truncate">GWaveRunner</h1>
-            <p className="text-[10px] text-gray-400 -mt-0.5">Marine Catering</p>
           </div>
         </div>
 
