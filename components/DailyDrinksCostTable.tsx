@@ -4,13 +4,35 @@ import { useState } from 'react';
 import type { DailyDrinksCostRow } from '@/lib/drinks-cost-processing';
 import { formatCurrencyFull, formatDate } from '@/lib/utils';
 
-type SortField = 'date' | 'beer_soft_bottles' | 'beer_soft_cost' | 'wine_rhum_bottles' | 'wine_rhum_cost' | 'total_cost';
+type SortField = 'date' | 'coca_cola_cost' | 'sprite_cost' | 'beer_cost' | 'rhum_cost' | 'rose_cost' | 'blanc_cost' | 'total_cost';
 type SortDir = 'asc' | 'desc';
+
+const COLUMNS: { field: SortField; label: string; btlField?: keyof DailyDrinksCostRow }[] = [
+  { field: 'coca_cola_cost', label: 'Coca-Cola', btlField: 'coca_cola_btl' },
+  { field: 'sprite_cost', label: 'Sprite', btlField: 'sprite_btl' },
+  { field: 'beer_cost', label: 'Beer', btlField: 'beer_btl' },
+  { field: 'rhum_cost', label: 'Rhum', btlField: 'rhum_btl' },
+  { field: 'rose_cost', label: 'Rosé', btlField: 'rose_btl' },
+  { field: 'blanc_cost', label: 'Blanc', btlField: 'blanc_btl' },
+];
 
 interface Props {
   rows: DailyDrinksCostRow[];
-  totals: { beer_soft: number; wine_rhum: number; grand: number };
+  totals: {
+    coca_cola: number; sprite: number; beer: number;
+    rhum: number; rose: number; blanc: number;
+    grand: number;
+  };
 }
+
+const TOTAL_KEYS: Record<string, keyof Props['totals']> = {
+  coca_cola_cost: 'coca_cola',
+  sprite_cost: 'sprite',
+  beer_cost: 'beer',
+  rhum_cost: 'rhum',
+  rose_cost: 'rose',
+  blanc_cost: 'blanc',
+};
 
 export default function DailyDrinksCostTable({ rows, totals }: Props) {
   const [sortField, setSortField] = useState<SortField>('date');
@@ -36,43 +58,36 @@ export default function DailyDrinksCostTable({ rows, totals }: Props) {
     return <span className="text-primary ml-0.5">{sortDir === 'asc' ? '\u2191' : '\u2193'}</span>;
   };
 
-  const thClass = 'px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer select-none hover:text-primary transition-colors';
-  const tdClass = 'px-3 py-2.5 text-sm';
+  const thClass = 'px-2 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400 cursor-pointer select-none hover:text-primary transition-colors';
+  const tdClass = 'px-2 py-2.5 text-sm';
 
   return (
     <div className="bg-white rounded-2xl shadow-lg shadow-gray-200/50 overflow-hidden">
       <div className="px-5 py-4 border-b border-gray-100">
         <h3 className="text-sm font-bold text-gray-800">Daily Drinks Cost</h3>
-        <p className="text-[10px] text-gray-400 mt-0.5">Usage (bottles) x Average cost per bottle</p>
+        <p className="text-[10px] text-gray-400 mt-0.5">Usage (bottles) x Standard cost per bottle</p>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[600px]">
+        <table className="w-full min-w-[800px]">
           <thead>
             <tr className="border-b border-gray-100">
               <th className={thClass} onClick={() => toggleSort('date')}>
                 Date <SortIcon field="date" />
               </th>
-              <th className={`${thClass} text-right`} onClick={() => toggleSort('beer_soft_bottles')}>
-                Beer & Soft (btl) <SortIcon field="beer_soft_bottles" />
-              </th>
-              <th className={`${thClass} text-right`} onClick={() => toggleSort('beer_soft_cost')}>
-                Beer & Soft (Rs) <SortIcon field="beer_soft_cost" />
-              </th>
-              <th className={`${thClass} text-right`} onClick={() => toggleSort('wine_rhum_bottles')}>
-                Wine & Rhum (btl) <SortIcon field="wine_rhum_bottles" />
-              </th>
-              <th className={`${thClass} text-right`} onClick={() => toggleSort('wine_rhum_cost')}>
-                Wine & Rhum (Rs) <SortIcon field="wine_rhum_cost" />
-              </th>
+              {COLUMNS.map((col) => (
+                <th key={col.field} className={`${thClass} text-right`} onClick={() => toggleSort(col.field)}>
+                  {col.label} <SortIcon field={col.field} />
+                </th>
+              ))}
               <th className={`${thClass} text-right`} onClick={() => toggleSort('total_cost')}>
-                Total (Rs) <SortIcon field="total_cost" />
+                Total <SortIcon field="total_cost" />
               </th>
             </tr>
           </thead>
           <tbody>
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-3 py-8 text-center text-sm text-gray-400">
+                <td colSpan={8} className="px-3 py-8 text-center text-sm text-gray-400">
                   No drinks usage data for this period
                 </td>
               </tr>
@@ -80,10 +95,22 @@ export default function DailyDrinksCostTable({ rows, totals }: Props) {
               sorted.map((r) => (
                 <tr key={r.date} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                   <td className={`${tdClass} font-medium text-gray-700`}>{formatDate(r.date)}</td>
-                  <td className={`${tdClass} text-right text-gray-600`}>{r.beer_soft_bottles}</td>
-                  <td className={`${tdClass} text-right text-gray-700`}>{formatCurrencyFull(Math.round(r.beer_soft_cost))}</td>
-                  <td className={`${tdClass} text-right text-gray-600`}>{r.wine_rhum_bottles}</td>
-                  <td className={`${tdClass} text-right text-gray-700`}>{formatCurrencyFull(Math.round(r.wine_rhum_cost))}</td>
+                  {COLUMNS.map((col) => {
+                    const btl = col.btlField ? (r[col.btlField] as number) : 0;
+                    const cost = r[col.field] as number;
+                    return (
+                      <td key={col.field} className={`${tdClass} text-right`}>
+                        {btl > 0 ? (
+                          <>
+                            <span className="text-gray-700">{formatCurrencyFull(Math.round(cost))}</span>
+                            <span className="text-[10px] text-gray-400 ml-1">({btl})</span>
+                          </>
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
+                    );
+                  })}
                   <td className={`${tdClass} text-right font-semibold text-gray-800`}>{formatCurrencyFull(Math.round(r.total_cost))}</td>
                 </tr>
               ))
@@ -93,10 +120,14 @@ export default function DailyDrinksCostTable({ rows, totals }: Props) {
             <tfoot>
               <tr className="bg-gray-50 border-t-2 border-gray-200">
                 <td className={`${tdClass} font-bold text-gray-700`}>Total</td>
-                <td className={`${tdClass} text-right`} />
-                <td className={`${tdClass} text-right font-bold text-gray-800`}>{formatCurrencyFull(Math.round(totals.beer_soft))}</td>
-                <td className={`${tdClass} text-right`} />
-                <td className={`${tdClass} text-right font-bold text-gray-800`}>{formatCurrencyFull(Math.round(totals.wine_rhum))}</td>
+                {COLUMNS.map((col) => {
+                  const totalKey = TOTAL_KEYS[col.field];
+                  return (
+                    <td key={col.field} className={`${tdClass} text-right font-bold text-gray-800`}>
+                      {formatCurrencyFull(Math.round(totals[totalKey]))}
+                    </td>
+                  );
+                })}
                 <td className={`${tdClass} text-right font-bold text-gray-900`}>{formatCurrencyFull(Math.round(totals.grand))}</td>
               </tr>
             </tfoot>

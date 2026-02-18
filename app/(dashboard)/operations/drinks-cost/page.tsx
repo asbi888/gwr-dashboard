@@ -4,7 +4,7 @@ import { useState } from 'react';
 import PageShell from '@/components/PageShell';
 import DailyDrinksCostTable from '@/components/DailyDrinksCostTable';
 import DrinksPurchaseTable from '@/components/DrinksPurchaseTable';
-import { computeDailyDrinksCosts, getDrinksPurchases } from '@/lib/drinks-cost-processing';
+import { computeDailyDrinksCosts, getDrinksPurchases, DRINK_UNIT_COSTS } from '@/lib/drinks-cost-processing';
 import {
   formatCurrencyFull,
   formatCurrencyDecimal,
@@ -22,8 +22,11 @@ const DATE_PRESETS: { value: DatePreset; label: string }[] = [
 ];
 
 const KPI_CONFIG = [
-  { key: 'beer_soft' as const, label: 'Avg Cost/Bottle Beer & Soft', color: 'from-green-400 to-green-500' },
-  { key: 'wine_rhum' as const, label: 'Avg Cost/Bottle Wine & Rhum', color: 'from-purple-400 to-purple-500' },
+  { label: 'Avg Coca-Cola Cost per Bottle', cost: DRINK_UNIT_COSTS.coca_cola, color: 'from-red-400 to-red-500' },
+  { label: 'Avg Beer Cost per Bottle', cost: DRINK_UNIT_COSTS.beer, color: 'from-amber-400 to-amber-500' },
+  { label: 'Avg Blanc Cost per Bottle', cost: DRINK_UNIT_COSTS.blanc, color: 'from-teal-400 to-teal-500' },
+  { label: 'Avg Rosé Cost per Bottle', cost: DRINK_UNIT_COSTS.rose, color: 'from-pink-400 to-pink-500' },
+  { label: 'Avg Rhum Cost per Bottle', cost: DRINK_UNIT_COSTS.rhum, color: 'from-purple-400 to-purple-500' },
 ];
 
 export default function DrinksCostPage() {
@@ -35,7 +38,7 @@ export default function DrinksCostPage() {
   return (
     <PageShell
       title="Operations - Drinks Cost"
-      subtitle="Daily drinks costs based on usage and average purchase prices"
+      subtitle="Daily drinks costs based on usage and standard cost per bottle"
       icon={
         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -58,7 +61,7 @@ export default function DrinksCostPage() {
           filteredDrinksUsage = filteredDrinksUsage.filter((d) => d.usage_date <= resolved.to!);
         }
 
-        const { rows, avgCostPerBottle, totals, unweightedCosts } = computeDailyDrinksCosts(filteredExpenses, filteredDrinksUsage);
+        const { rows, totals } = computeDailyDrinksCosts(filteredDrinksUsage);
         const drinksPurchases = getDrinksPurchases(filteredExpenses);
 
         return (
@@ -138,10 +141,10 @@ export default function DrinksCostPage() {
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
               {KPI_CONFIG.map((kpi, i) => (
                 <div
-                  key={kpi.key}
+                  key={kpi.label}
                   className={`animate-fade-in-up opacity-0 delay-${(i + 2) * 100} bg-white rounded-2xl shadow-lg shadow-gray-200/50 p-5`}
                 >
                   <div className="flex items-center gap-3 mb-3">
@@ -153,13 +156,13 @@ export default function DrinksCostPage() {
                     <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{kpi.label}</span>
                   </div>
                   <p className="text-2xl font-bold text-gray-800">
-                    {avgCostPerBottle[kpi.key] > 0 ? formatCurrencyDecimal(avgCostPerBottle[kpi.key]) : '—'}
+                    {formatCurrencyDecimal(kpi.cost)}
                   </p>
                 </div>
               ))}
 
               {/* Total Drinks Cost Card */}
-              <div className="animate-fade-in-up opacity-0 delay-400 bg-white rounded-2xl shadow-lg shadow-gray-200/50 p-5">
+              <div className="animate-fade-in-up opacity-0 delay-500 bg-white rounded-2xl shadow-lg shadow-gray-200/50 p-5">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7B61FF] to-[#4FD1C5] flex items-center justify-center">
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,11 +174,6 @@ export default function DrinksCostPage() {
                 <p className="text-2xl font-bold text-gray-800">
                   {totals.grand > 0 ? formatCurrencyFull(Math.round(totals.grand)) : '—'}
                 </p>
-                {unweightedCosts.grand > 0 && (
-                  <p className="text-[10px] text-amber-600 mt-1">
-                    Incl. {formatCurrencyFull(Math.round(unweightedCosts.grand))} without bottle data
-                  </p>
-                )}
               </div>
             </div>
 
