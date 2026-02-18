@@ -70,6 +70,7 @@ const NAV_ITEMS: NavItem[] = [
     children: [
       { label: 'Inventory', href: '/operations/inventory' },
       { label: 'Food Cost', href: '/operations/food-cost' },
+      { label: 'Drinks Cost', href: '/operations/drinks-cost' },
       { label: 'Data Entry', href: '/operations/data-entry' },
     ],
   },
