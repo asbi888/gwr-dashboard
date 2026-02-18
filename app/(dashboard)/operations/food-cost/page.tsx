@@ -59,7 +59,7 @@ export default function FoodCostPage() {
           filteredFoodUsage = filteredFoodUsage.filter((f) => f.usage_date <= resolved.to!);
         }
 
-        const { rows, avgCostPerKg, totals } = computeDailyFoodCosts(filteredExpenses, filteredFoodUsage);
+        const { rows, avgCostPerKg, totals, unweightedCosts } = computeDailyFoodCosts(filteredExpenses, filteredFoodUsage);
         const ingredientExpenses = getIngredientExpenses(filteredExpenses);
 
         return (
@@ -172,6 +172,11 @@ export default function FoodCostPage() {
                 <p className="text-2xl font-bold text-gray-800">
                   {totals.grand > 0 ? formatCurrencyFull(Math.round(totals.grand)) : '—'}
                 </p>
+                {unweightedCosts.grand > 0 && (
+                  <p className="text-[10px] text-amber-600 mt-1">
+                    Incl. {formatCurrencyFull(Math.round(unweightedCosts.grand))} without kg data
+                  </p>
+                )}
               </div>
             </div>
 

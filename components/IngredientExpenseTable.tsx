@@ -100,7 +100,10 @@ export default function IngredientExpenseTable({ rows }: Props) {
                       </span>
                     </td>
                     <td className={`${tdClass} text-right text-gray-600`}>
-                      {r.quantity != null ? `${r.quantity.toFixed(1)} ${r.unit_of_measure || ''}` : '—'}
+                      {r.quantity != null && r.quantity > 0
+                        ? `${r.quantity.toFixed(1)} ${r.unit_of_measure || ''}`
+                        : <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-50 text-amber-600">No qty</span>
+                      }
                     </td>
                     <td className={`${tdClass} text-right font-medium text-gray-700`}>{formatCurrencyFull(Math.round(r.net_amount))}</td>
                   </tr>

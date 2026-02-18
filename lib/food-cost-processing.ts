@@ -18,6 +18,8 @@ export interface FoodCostResult {
   rows: DailyFoodCostRow[];
   avgCostPerKg: { poulet: number; poisson: number; langoustes: number };
   totals: { poulet: number; poisson: number; langoustes: number; grand: number };
+  /** Food expenses that lack kg quantity — included in grand total but not in daily cost breakdown */
+  unweightedCosts: { poulet: number; poisson: number; langoustes: number; grand: number };
 }
 
 export interface IngredientExpenseRow {
@@ -45,11 +47,21 @@ export function computeDailyFoodCosts(
     langoustes: { amount: 0, kg: 0 },
   };
 
+  // Track food expenses without kg data (still contributes to total food cost)
+  const unweightedCosts = { poulet: 0, poisson: 0, langoustes: 0, grand: 0 };
+
   expenses.forEach((e) => {
     const product = classifyFoodExpense(e);
-    if (product && e.quantity && e.quantity > 0 && (e.unit_of_measure || '').toLowerCase() === 'kg') {
+    if (!product) return;
+
+    const hasKg = e.quantity && e.quantity > 0 && (e.unit_of_measure || '').toLowerCase() === 'kg';
+    if (hasKg) {
       sums[product].amount += e.net_amount;
-      sums[product].kg += e.quantity;
+      sums[product].kg += e.quantity!;
+    } else {
+      // Food expense without kg — track separately
+      unweightedCosts[product] += e.net_amount;
+      unweightedCosts.grand += e.net_amount;
     }
   });
 
@@ -91,7 +103,10 @@ export function computeDailyFoodCosts(
     { poulet: 0, poisson: 0, langoustes: 0, grand: 0 }
   );
 
-  return { rows, avgCostPerKg, totals };
+  // Include unweighted food costs in grand total
+  totals.grand += unweightedCosts.grand;
+
+  return { rows, avgCostPerKg, totals, unweightedCosts };
 }
 
 // ── Get ingredient (food-related) expenses ──
