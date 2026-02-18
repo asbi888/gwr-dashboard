@@ -7,7 +7,6 @@ import {
   buildOdooExportRows,
   generateOdooCsv,
   getExportSummary,
-  ACCOUNT_LABELS,
 } from '@/lib/odoo-export-processing';
 import {
   formatCurrencyFull,
@@ -29,6 +28,7 @@ export default function OdooExportPage() {
   const [dateRange, setDateRange] = useState<{ from: string | null; to: string | null }>({ from: null, to: null });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [autoSelectDone, setAutoSelectDone] = useState(false);
+  const [accountOverrides, setAccountOverrides] = useState<Record<string, string>>({});
 
   const hasActiveFilters = datePreset !== 'all_time';
 
@@ -39,6 +39,10 @@ export default function OdooExportPage() {
       else next.add(id);
       return next;
     });
+  }, []);
+
+  const handleAccountChange = useCallback((expenseId: string, code: string) => {
+    setAccountOverrides((prev) => ({ ...prev, [expenseId]: code }));
   }, []);
 
   return (
@@ -87,7 +91,12 @@ export default function OdooExportPage() {
         };
 
         const handleDownloadCsv = () => {
-          const selectedRows = rows.filter((r) => selectedIds.has(r.expense_id));
+          const selectedRows = rows
+            .filter((r) => selectedIds.has(r.expense_id))
+            .map((r) => ({
+              ...r,
+              account: accountOverrides[r.expense_id] ?? r.account,
+            }));
           if (selectedRows.length === 0) return;
 
           const csv = generateOdooCsv(selectedRows);
@@ -288,6 +297,8 @@ export default function OdooExportPage() {
                 selectedIds={selectedIds}
                 onToggle={handleToggle}
                 onToggleAll={handleToggleAll}
+                accountOverrides={accountOverrides}
+                onAccountChange={handleAccountChange}
               />
             </div>
           </>

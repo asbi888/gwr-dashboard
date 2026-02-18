@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import type { OdooExportRow } from '@/lib/odoo-export-processing';
-import { ACCOUNT_LABELS } from '@/lib/odoo-export-processing';
+import { getAccountLabel } from '@/lib/chart-of-accounts';
+import AccountCellEditor from '@/components/AccountCellEditor';
 import { formatCurrencyFull, formatDate } from '@/lib/utils';
 
 type SortField = 'date' | 'supplier' | 'invoice_number' | 'description' | 'kg' | 'amount' | 'vat_amount' | 'account';
@@ -13,9 +14,11 @@ interface Props {
   selectedIds: Set<string>;
   onToggle: (id: string) => void;
   onToggleAll: () => void;
+  accountOverrides: Record<string, string>;
+  onAccountChange: (expenseId: string, code: string) => void;
 }
 
-export default function OdooExportTable({ rows, selectedIds, onToggle, onToggleAll }: Props) {
+export default function OdooExportTable({ rows, selectedIds, onToggle, onToggleAll, accountOverrides, onAccountChange }: Props) {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
@@ -28,6 +31,10 @@ export default function OdooExportTable({ rows, selectedIds, onToggle, onToggleA
     }
   };
 
+  // Helper: get effective account (override or auto-assigned)
+  const getEffectiveAccount = (r: OdooExportRow) =>
+    accountOverrides[r.expense_id] ?? r.account;
+
   const sorted = [...rows].sort((a, b) => {
     const mul = sortDir === 'asc' ? 1 : -1;
     switch (sortField) {
@@ -38,7 +45,7 @@ export default function OdooExportTable({ rows, selectedIds, onToggle, onToggleA
       case 'kg': return mul * ((a.kg || 0) - (b.kg || 0));
       case 'amount': return mul * (a.amount - b.amount);
       case 'vat_amount': return mul * (a.vat_amount - b.vat_amount);
-      case 'account': return mul * a.account.localeCompare(b.account);
+      case 'account': return mul * getEffectiveAccount(a).localeCompare(getEffectiveAccount(b));
       default: return 0;
     }
   });
@@ -63,11 +70,12 @@ export default function OdooExportTable({ rows, selectedIds, onToggle, onToggleA
           <h3 className="text-sm font-bold text-gray-800">Vendor Bills Preview</h3>
           <p className="text-[10px] text-gray-400 mt-0.5">
             Select rows to include in the Odoo CSV export &middot; {selectedIds.size} of {rows.length} selected
+            &middot; Click account badge to change
           </p>
         </div>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px]">
+        <table className="w-full min-w-[950px]">
           <thead>
             <tr className="border-b border-gray-100">
               <th className="px-2 py-2.5 w-8">
@@ -114,6 +122,8 @@ export default function OdooExportTable({ rows, selectedIds, onToggle, onToggleA
             ) : (
               sorted.map((r) => {
                 const isSelected = selectedIds.has(r.expense_id);
+                const effectiveAccount = getEffectiveAccount(r);
+                const isOverridden = !!accountOverrides[r.expense_id];
                 return (
                   <tr
                     key={r.expense_id}
@@ -134,7 +144,7 @@ export default function OdooExportTable({ rows, selectedIds, onToggle, onToggleA
                     <td className={`${tdClass} text-gray-600 whitespace-nowrap`}>{formatDate(r.date)}</td>
                     <td className={`${tdClass} font-medium text-gray-700`}>
                       {r.supplier}
-                      {!r.isMapped && (
+                      {!r.isMapped && !isOverridden && (
                         <span className="ml-1.5 inline-block px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-50 text-amber-600">
                           Unmapped
                         </span>
@@ -150,14 +160,15 @@ export default function OdooExportTable({ rows, selectedIds, onToggle, onToggleA
                       {r.vat_amount > 0 ? formatCurrencyFull(Math.round(r.vat_amount)) : <span className="text-gray-300">&mdash;</span>}
                     </td>
                     <td className={tdClass}>
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                        r.account === '630000' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-                      }`}>
-                        {r.account}
-                      </span>
-                      <span className="text-[10px] text-gray-400 ml-1 hidden xl:inline">
-                        {ACCOUNT_LABELS[r.account] || ''}
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <AccountCellEditor
+                          currentCode={effectiveAccount}
+                          onChangeCode={(code) => onAccountChange(r.expense_id, code)}
+                        />
+                        <span className="text-[10px] text-gray-400 hidden xl:inline truncate max-w-[100px]">
+                          {getAccountLabel(effectiveAccount)}
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 );

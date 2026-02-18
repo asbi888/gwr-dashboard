@@ -31,13 +31,6 @@ export const SUPPLIER_ACCOUNT_MAP: Record<string, string> = {
 // Default account for unmapped suppliers
 const DEFAULT_ACCOUNT = '211000';
 
-// ── COA Account Labels (for display) ──
-
-export const ACCOUNT_LABELS: Record<string, string> = {
-  '211000': 'Account Payable',
-  '630000': 'Salary Expenses',
-};
-
 // ── Resolve supplier name to Odoo account code ──
 
 export function getSupplierAccount(supplierName: string): string {
