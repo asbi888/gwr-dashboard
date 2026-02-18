@@ -14,6 +14,11 @@ export function formatCurrencyFull(amount: number): string {
   return `Rs ${amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
+// Format currency with 2 decimal places (for cost per kg)
+export function formatCurrencyDecimal(amount: number): string {
+  return `Rs ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 // Format percentage
 export function formatPercent(value: number): string {
   return `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;

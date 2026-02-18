@@ -4,7 +4,7 @@ import type { UserRole } from './auth-context';
 const ROUTE_ACCESS: Record<UserRole, string[]> = {
   admin: ['*'],
   manager: ['/', '/revenue', '/expenses', '/operations'],
-  staff: ['/operations/inventory', '/operations/data-entry'],
+  staff: ['/operations/inventory', '/operations/food-cost', '/operations/data-entry'],
 };
 
 export function canAccessRoute(role: UserRole, pathname: string): boolean {

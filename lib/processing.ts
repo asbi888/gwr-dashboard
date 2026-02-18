@@ -249,17 +249,17 @@ export function getUniqueSupplierNames(expenses: Expense[], suppliers: Supplier[
 
 // ── Food expense classification (mirrors ETL CATEGORY_KEYWORDS) ──
 
-function classifyFoodExpense(expense: Expense): 'poulet' | 'langoustes' | 'poisson' | null {
+export function classifyFoodExpense(expense: Expense): 'poulet' | 'langoustes' | 'poisson' | null {
   const desc = (expense.description || '').toLowerCase();
   const cat = (expense.category || '').toLowerCase();
 
-  if (cat.includes('poultry') || desc.includes('chicken') || desc.includes('poulet')) {
+  if (cat === 'chicken' || cat.includes('poultry') || desc.includes('chicken') || desc.includes('poulet')) {
     return 'poulet';
   }
-  if (desc.includes('langouste') || desc.includes('lobster') || desc.includes('gambas')) {
+  if (cat === 'lobster' || desc.includes('langouste') || desc.includes('lobster') || desc.includes('gambas')) {
     return 'langoustes';
   }
-  if (desc.includes('poisson') || desc.includes('fish')) {
+  if (cat === 'fish' || desc.includes('poisson') || desc.includes('fish')) {
     return 'poisson';
   }
   if (cat.includes('seafood')) {
