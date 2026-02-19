@@ -3,8 +3,8 @@ import type { UserRole } from './auth-context';
 // Which route prefixes each role can access
 const ROUTE_ACCESS: Record<UserRole, string[]> = {
   admin: ['*'],
-  manager: ['/', '/revenue', '/expenses', '/operations'],
-  staff: ['/operations/inventory', '/operations/food-cost', '/operations/drinks-cost', '/operations/data-entry'],
+  manager: ['/', '/revenue', '/expenses', '/operations/inventory', '/operations/food-cost', '/operations/drinks-cost'],
+  staff: ['/operations/inventory', '/operations/food-cost', '/operations/drinks-cost'],
 };
 
 export function canAccessRoute(role: UserRole, pathname: string): boolean {
@@ -42,7 +42,7 @@ export function getDefaultRoute(role: UserRole): string {
     case 'manager':
       return '/';
     case 'staff':
-      return '/operations/data-entry';
+      return '/operations/inventory';
     default:
       return '/login';
   }

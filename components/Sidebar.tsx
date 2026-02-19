@@ -10,6 +10,7 @@ import { getVisibleNavIds } from '@/lib/permissions';
 interface NavChild {
   label: string;
   href: string;
+  adminOnly?: boolean;
 }
 
 interface NavItem {
@@ -72,7 +73,7 @@ const NAV_ITEMS: NavItem[] = [
       { label: 'Inventory', href: '/operations/inventory' },
       { label: 'Food Cost', href: '/operations/food-cost' },
       { label: 'Drinks Cost', href: '/operations/drinks-cost' },
-      { label: 'Data Entry', href: '/operations/data-entry' },
+      { label: 'Data Entry', href: '/operations/data-entry', adminOnly: true },
     ],
   },
   {
@@ -105,7 +106,13 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   });
 
   const visibleIds = profile ? getVisibleNavIds(profile.role) : [];
-  const filteredItems = NAV_ITEMS.filter((item) => visibleIds.includes(item.id));
+  const isAdmin = profile?.role === 'admin';
+  const filteredItems = NAV_ITEMS
+    .filter((item) => visibleIds.includes(item.id))
+    .map((item) => ({
+      ...item,
+      children: item.children?.filter((c) => !c.adminOnly || isAdmin),
+    }));
 
   const isActive = (href: string) => pathname === href;
   const hasActiveChild = (item: NavItem) =>
