@@ -131,55 +131,10 @@ CREATE POLICY "Authenticated read" ON public.gwr_drinks_usage
 CREATE POLICY "Authenticated read" ON public.gwr_wr_revenue
   FOR SELECT USING (user_has_role(ARRAY['admin','manager','staff']));
 
--- WRITE policies (INSERT/UPDATE/DELETE for all authenticated active users)
-CREATE POLICY "Authenticated write" ON public.gwr_expenses
-  FOR INSERT WITH CHECK (user_has_role(ARRAY['admin','manager','staff']));
-CREATE POLICY "Authenticated update" ON public.gwr_expenses
-  FOR UPDATE USING (user_has_role(ARRAY['admin','manager','staff']));
-CREATE POLICY "Authenticated delete" ON public.gwr_expenses
-  FOR DELETE USING (user_has_role(ARRAY['admin','manager','staff']));
-
-CREATE POLICY "Authenticated write" ON public.gwr_suppliers
-  FOR INSERT WITH CHECK (user_has_role(ARRAY['admin','manager','staff']));
-CREATE POLICY "Authenticated update" ON public.gwr_suppliers
-  FOR UPDATE USING (user_has_role(ARRAY['admin','manager','staff']));
-CREATE POLICY "Authenticated delete" ON public.gwr_suppliers
-  FOR DELETE USING (user_has_role(ARRAY['admin','manager','staff']));
-
-CREATE POLICY "Authenticated write" ON public.gwr_revenue
-  FOR INSERT WITH CHECK (user_has_role(ARRAY['admin','manager','staff']));
-CREATE POLICY "Authenticated update" ON public.gwr_revenue
-  FOR UPDATE USING (user_has_role(ARRAY['admin','manager','staff']));
-CREATE POLICY "Authenticated delete" ON public.gwr_revenue
-  FOR DELETE USING (user_has_role(ARRAY['admin','manager','staff']));
-
-CREATE POLICY "Authenticated write" ON public.gwr_revenue_lines
-  FOR INSERT WITH CHECK (user_has_role(ARRAY['admin','manager','staff']));
-CREATE POLICY "Authenticated update" ON public.gwr_revenue_lines
-  FOR UPDATE USING (user_has_role(ARRAY['admin','manager','staff']));
-CREATE POLICY "Authenticated delete" ON public.gwr_revenue_lines
-  FOR DELETE USING (user_has_role(ARRAY['admin','manager','staff']));
-
-CREATE POLICY "Authenticated write" ON public.gwr_food_usage
-  FOR INSERT WITH CHECK (user_has_role(ARRAY['admin','manager','staff']));
-CREATE POLICY "Authenticated update" ON public.gwr_food_usage
-  FOR UPDATE USING (user_has_role(ARRAY['admin','manager','staff']));
-CREATE POLICY "Authenticated delete" ON public.gwr_food_usage
-  FOR DELETE USING (user_has_role(ARRAY['admin','manager','staff']));
-
-CREATE POLICY "Authenticated write" ON public.gwr_drinks_usage
-  FOR INSERT WITH CHECK (user_has_role(ARRAY['admin','manager','staff']));
-CREATE POLICY "Authenticated update" ON public.gwr_drinks_usage
-  FOR UPDATE USING (user_has_role(ARRAY['admin','manager','staff']));
-CREATE POLICY "Authenticated delete" ON public.gwr_drinks_usage
-  FOR DELETE USING (user_has_role(ARRAY['admin','manager','staff']));
-
-CREATE POLICY "Authenticated write" ON public.gwr_wr_revenue
-  FOR INSERT WITH CHECK (user_has_role(ARRAY['admin','manager','staff']));
-CREATE POLICY "Authenticated update" ON public.gwr_wr_revenue
-  FOR UPDATE USING (user_has_role(ARRAY['admin','manager','staff']));
-CREATE POLICY "Authenticated delete" ON public.gwr_wr_revenue
-  FOR DELETE USING (user_has_role(ARRAY['admin','manager','staff']));
+-- NOTE: No INSERT/UPDATE/DELETE policies on gwr_* tables.
+-- All writes go through the Next.js API route (/api/mutations)
+-- which uses the service role key (bypasses RLS).
+-- The browser anon key can only SELECT data.
 
 
 -- ============================================================
