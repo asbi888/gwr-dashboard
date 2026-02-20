@@ -4,8 +4,8 @@ import { cookies } from 'next/headers';
 import { NextResponse, type NextRequest } from 'next/server';
 
 // Allowed tables that can be mutated through this route
+// gwr_expenses removed — expenses are read-only (managed via ETL pipeline)
 const ALLOWED_TABLES = [
-  'gwr_expenses',
   'gwr_suppliers',
   'gwr_revenue',
   'gwr_revenue_lines',

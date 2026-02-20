@@ -10,12 +10,11 @@ import { useDashboardData } from '@/lib/data-context';
 import FoodUsageForm from '@/components/forms/FoodUsageForm';
 import DrinksUsageForm from '@/components/forms/DrinksUsageForm';
 import WRRevenueForm from '@/components/forms/WRRevenueForm';
-import ExpenseForm from '@/components/forms/ExpenseForm';
 import RevenueForm from '@/components/forms/RevenueForm';
 import InlineActions from '@/components/InlineActions';
-import { deleteFoodUsage, deleteDrinksUsage, deleteWRRevenue, deleteExpense, deleteRevenue } from '@/lib/mutations';
+import { deleteFoodUsage, deleteDrinksUsage, deleteWRRevenue, deleteRevenue } from '@/lib/mutations';
 import { formatDate, formatCurrencyFull } from '@/lib/utils';
-import type { FoodUsage, DrinksUsage, WRRevenue, Expense, Revenue } from '@/lib/supabase';
+import type { FoodUsage, DrinksUsage, WRRevenue, Revenue } from '@/lib/supabase';
 
 const TABS = [
   {
@@ -42,15 +41,6 @@ const TABS = [
     icon: (
       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-      </svg>
-    ),
-  },
-  {
-    key: 'expenses',
-    label: 'Expenses',
-    icon: (
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
       </svg>
     ),
   },
@@ -82,7 +72,6 @@ export default function DataEntryPage() {
         case 'food': await deleteFoodUsage(deleteTarget.id as number); break;
         case 'drinks': await deleteDrinksUsage(deleteTarget.id as number); break;
         case 'wr': await deleteWRRevenue(deleteTarget.id as number); break;
-        case 'expenses': await deleteExpense(deleteTarget.id as string); break;
         case 'revenue': await deleteRevenue(deleteTarget.id as string); break;
       }
       toast('Record deleted', 'success');
@@ -106,8 +95,6 @@ export default function DataEntryPage() {
       {(data) => {
         // Unique client names from existing revenue records (sorted A-Z)
         const revenueClients = [...new Set(data.revenue.map((r) => r.client_name).filter(Boolean))].sort();
-        // Unique supplier names from existing expenses (sorted A-Z)
-        const expenseSuppliers = [...new Set(data.expenses.map((r) => r.supplier_name).filter(Boolean))].sort();
 
         return (
         <>
@@ -178,26 +165,6 @@ export default function DataEntryPage() {
               </div>
             )}
 
-            {/* ── EXPENSES TAB ── */}
-            {activeTab === 'expenses' && (
-              <div className="space-y-6">
-                <div className="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50">
-                  <h3 className="text-sm font-bold text-navy mb-4">Add Expense</h3>
-                  <ExpenseForm supplierSuggestions={expenseSuppliers} onSave={() => {}} onCancel={() => {}} />
-                </div>
-                <RecentTable
-                  title="Recent Expenses"
-                  columns={['Date', 'Description', 'Category', 'Total']}
-                  rows={data.expenses.slice(0, 20).map((r) => ({
-                    id: r.expense_id,
-                    cells: [formatDate(r.expense_date), r.description, r.category || 'General', formatCurrencyFull(r.total_amount)],
-                  }))}
-                  onEdit={(id) => setEditItem(data.expenses.find((r) => r.expense_id === id))}
-                  onDelete={(id) => setDeleteTarget({ type: 'expenses', id: id as string, label: `expense: ${data.expenses.find((r) => r.expense_id === id)?.description}` })}
-                />
-              </div>
-            )}
-
             {/* ── REVENUE TAB ── */}
             {activeTab === 'revenue' && (
               <div className="space-y-6">
@@ -259,23 +226,6 @@ export default function DataEntryPage() {
             {editItem && activeTab === 'wr' && (
               <WRRevenueForm
                 initialData={editItem as WRRevenue}
-                onSave={() => setEditItem(null)}
-                onCancel={() => setEditItem(null)}
-              />
-            )}
-          </Modal>
-
-          {/* Expense Edit */}
-          <Modal
-            open={!!editItem && activeTab === 'expenses'}
-            onClose={() => setEditItem(null)}
-            title="Edit Expense"
-            size="lg"
-          >
-            {editItem && activeTab === 'expenses' && (
-              <ExpenseForm
-                initialData={editItem as Expense}
-                supplierSuggestions={expenseSuppliers}
                 onSave={() => setEditItem(null)}
                 onCancel={() => setEditItem(null)}
               />

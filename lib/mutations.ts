@@ -1,4 +1,4 @@
-import type { Expense, Revenue, RevenueLine, FoodUsage, DrinksUsage, WRRevenue } from './supabase';
+import type { Revenue, RevenueLine, FoodUsage, DrinksUsage, WRRevenue } from './supabase';
 
 // ── Helper: call the server-side mutations API route ──
 
@@ -148,51 +148,7 @@ export async function deleteWRRevenue(staging_id: number): Promise<void> {
   });
 }
 
-// ── Expenses CRUD ──
-
-export async function insertExpense(
-  data: Omit<Expense, 'expense_id'>,
-): Promise<Expense> {
-  const expense_id = crypto.randomUUID();
-  const total_amount = (data.net_amount || 0) + (data.vat_amount || 0);
-
-  // Exclude supplier_key to avoid FK constraint
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { supplier_key: _sk, ...rest } = data;
-
-  return mutate<Expense>({
-    action: 'insert',
-    table: 'gwr_expenses',
-    data: { ...rest, expense_id, total_amount },
-  });
-}
-
-export async function updateExpense(
-  expense_id: string,
-  data: Partial<Omit<Expense, 'expense_id'>>,
-): Promise<Expense> {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { supplier_key: _sk, ...rest } = data;
-  const payload: Record<string, unknown> = { ...rest };
-  if ('net_amount' in data || 'vat_amount' in data) {
-    payload.total_amount = (data.net_amount ?? 0) + (data.vat_amount ?? 0);
-  }
-
-  return mutate<Expense>({
-    action: 'update',
-    table: 'gwr_expenses',
-    data: payload,
-    match: { expense_id },
-  });
-}
-
-export async function deleteExpense(expense_id: string): Promise<void> {
-  await mutate({
-    action: 'delete',
-    table: 'gwr_expenses',
-    match: { expense_id },
-  });
-}
+// ── Expenses: READ-ONLY (managed via ETL pipeline) ──
 
 // ── Revenue CRUD (parent + lines) ──
 
