@@ -91,18 +91,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [buildFallbackProfile]);
 
-  // Initialize: check existing session
+  // Initialize: validate user via getUser() (server-validated, not just JWT)
   useEffect(() => {
     async function init() {
       const {
-        data: { session: currentSession },
-      } = await supabase.auth.getSession();
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
 
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+      setUser(currentUser);
 
-      if (currentSession?.user) {
-        await fetchProfile(currentSession.user);
+      if (currentUser) {
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
+        setSession(currentSession);
+        await fetchProfile(currentUser);
+      } else {
+        setSession(null);
       }
       setLoading(false);
     }
