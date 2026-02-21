@@ -45,6 +45,7 @@ const NAV_ITEMS: NavItem[] = [
       { label: 'Weekly', href: '/revenue/weekly' },
       { label: 'By Client', href: '/revenue/clients' },
       { label: 'By Menu Item', href: '/revenue/menu' },
+      { label: 'WR Trips', href: '/revenue/wr-trips' },
     ],
   },
   {
