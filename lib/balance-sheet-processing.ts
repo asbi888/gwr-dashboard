@@ -73,11 +73,10 @@ const ACCOUNT_CLASSIFICATION: Record<number, AccountClassification> = {
   204: { category: 'Expense', subcategory: 'Other Expenses', normalBalance: 'debit' },                // 40005 Fuel
   213: { category: 'Expense', subcategory: 'Taxation', normalBalance: 'debit' },                      // 70001 Income tax
 
-  // ── Excluded: accounts 674/693/688 are alt-company accounts that cancel out ──
-  // They do NOT appear in Odoo's standard Balance Sheet and offset each other.
-  674: { category: 'Exclude', subcategory: 'Exclude', normalBalance: 'debit' },                       // Account Receivable (alt)
-  693: { category: 'Exclude', subcategory: 'Exclude', normalBalance: 'credit' },                      // Product Sales (alt)
-  688: { category: 'Exclude', subcategory: 'Exclude', normalBalance: 'credit' },                      // Tax Received (alt)
+  // ── Accounts 674/693/688: secondary accounts used for customer invoices ──
+  674: { category: 'Current Assets', subcategory: 'Receivables', normalBalance: 'debit' },            // Account Receivable
+  693: { category: 'Income', subcategory: 'Revenue', normalBalance: 'credit' },                       // Product Sales
+  688: { category: 'Current Liabilities', subcategory: 'Current Liabilities', normalBalance: 'credit' }, // Tax Received
 };
 
 // ── Display-friendly account name (keep COA code prefix to match Odoo) ──
