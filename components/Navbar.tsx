@@ -20,6 +20,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/operations/inventory': 'Operations - Inventory',
   '/operations/data-entry': 'Data Entry',
   '/admin/users': 'User Management',
+  '/admin/activity': 'Activity Log',
 };
 
 export default function Navbar({ onMenuToggle }: NavbarProps) {
