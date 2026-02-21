@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { canAccessRoute, getDefaultRoute } from '@/lib/permissions';
-import { useActivityTracker } from '@/lib/use-activity-tracker';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 
@@ -13,9 +12,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { profile, loading } = useAuth();
-
-  // Track logins + page views (fire-and-forget)
-  useActivityTracker();
 
   // Close mobile sidebar on route change
   useEffect(() => {

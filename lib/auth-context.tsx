@@ -9,7 +9,6 @@ import {
   type ReactNode,
 } from 'react';
 import { supabase } from './supabase';
-import { logActivity } from './activity';
 import type { User, Session } from '@supabase/supabase-js';
 
 export type UserRole = 'admin' | 'manager' | 'staff';
@@ -131,7 +130,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: error.message };
-    if (data.user) logActivity(data.user.id, 'login');
     return { error: null };
   }, []);
 

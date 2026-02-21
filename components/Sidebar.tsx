@@ -87,7 +87,6 @@ const NAV_ITEMS: NavItem[] = [
     ),
     children: [
       { label: 'User Management', href: '/admin/users' },
-      { label: 'Activity Log', href: '/admin/activity' },
     ],
   },
 ];
