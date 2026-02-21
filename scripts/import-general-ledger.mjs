@@ -12,13 +12,21 @@ import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { config } from 'dotenv';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CSV_PATH = path.resolve(__dirname, '..', 'OdooCsvFiles', 'general_ledger.csv');
 
-// Load env vars from .env.local
-config({ path: path.resolve(__dirname, '..', '.env.local') });
+// Load env vars from .env.local (no dotenv dependency)
+const envPath = path.resolve(__dirname, '..', '.env.local');
+const envText = fs.readFileSync(envPath, 'utf-8');
+for (const line of envText.split('\n')) {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.startsWith('#')) continue;
+  const eqIdx = trimmed.indexOf('=');
+  if (eqIdx > 0) {
+    process.env[trimmed.slice(0, eqIdx).trim()] = trimmed.slice(eqIdx + 1).trim();
+  }
+}
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
