@@ -2,20 +2,33 @@
  * One-time import: OdooCsvFiles/general_ledger.csv → Supabase gwr_general_ledger
  *
  * Usage:  node scripts/import-general-ledger.mjs
+ *
+ * Requires env vars (reads from ../.env.local automatically):
+ *   NEXT_PUBLIC_SUPABASE_URL
+ *   SUPABASE_SERVICE_ROLE_KEY
  */
 
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { config } from 'dotenv';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CSV_PATH = path.resolve(__dirname, '..', 'OdooCsvFiles', 'general_ledger.csv');
 
-const sb = createClient(
-  'https://jexxgrtbflintytzjkyu.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpleHhncnRiZmxpbnR5dHpqa3l1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTA3NzMwNCwiZXhwIjoyMDg2NjUzMzA0fQ.vVL4GzZzPYXofsgR_Ttpj9MHsbJpwkrQ-YMAtRbvBAw'
-);
+// Load env vars from .env.local
+config({ path: path.resolve(__dirname, '..', '.env.local') });
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !serviceRoleKey) {
+  console.error('Missing env vars. Ensure .env.local has NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
+  process.exit(1);
+}
+
+const sb = createClient(supabaseUrl, serviceRoleKey);
 
 // ── CSV parser that handles quoted fields with commas ──
 function parseCSV(text) {

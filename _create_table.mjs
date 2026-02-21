@@ -1,9 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
+import { config } from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const sb = createClient(
-  'https://jexxgrtbflintytzjkyu.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpleHhncnRiZmxpbnR5dHpqa3l1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTA3NzMwNCwiZXhwIjoyMDg2NjUzMzA0fQ.vVL4GzZzPYXofsgR_Ttpj9MHsbJpwkrQ-YMAtRbvBAw'
-);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+config({ path: path.resolve(__dirname, '.env.local') });
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !serviceRoleKey) {
+  console.error('Missing env vars. Ensure .env.local has NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
+  process.exit(1);
+}
+
+const sb = createClient(supabaseUrl, serviceRoleKey);
 
 const sql = `
 CREATE TABLE IF NOT EXISTS public.user_activity_log (
@@ -50,13 +61,13 @@ const { data, error } = await sb.rpc('exec_sql', { sql_text: sql });
 if (error) {
   console.log('rpc failed:', error.message);
   console.log('Trying direct SQL via management API...');
-  
-  const res = await fetch('https://jexxgrtbflintytzjkyu.supabase.co/rest/v1/rpc/exec_sql', {
+
+  const res = await fetch(`${supabaseUrl}/rest/v1/rpc/exec_sql`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpleHhncnRiZmxpbnR5dHpqa3l1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTA3NzMwNCwiZXhwIjoyMDg2NjUzMzA0fQ.vVL4GzZzPYXofsgR_Ttpj9MHsbJpwkrQ-YMAtRbvBAw',
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpleHhncnRiZmxpbnR5dHpqa3l1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTA3NzMwNCwiZXhwIjoyMDg2NjUzMzA0fQ.vVL4GzZzPYXofsgR_Ttpj9MHsbJpwkrQ-YMAtRbvBAw'
+      'apikey': serviceRoleKey,
+      'Authorization': `Bearer ${serviceRoleKey}`
     },
     body: JSON.stringify({ sql_text: sql })
   });
