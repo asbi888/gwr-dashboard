@@ -63,6 +63,18 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
+    id: 'odoo',
+    label: 'Odoo',
+    icon: (
+      <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+    ),
+    children: [
+      { label: 'Balance Sheet', href: '/odoo/balance-sheet' },
+    ],
+  },
+  {
     id: 'operations',
     label: 'Operations',
     icon: (
@@ -102,6 +114,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     revenue: true,
     expenses: true,
+    odoo: true,
     operations: true,
     admin: true,
   });

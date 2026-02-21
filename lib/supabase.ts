@@ -77,6 +77,24 @@ export interface WRRevenue {
   amount: number;
 }
 
+export interface GeneralLedgerEntry {
+  id: number;
+  entry_id: number;
+  move_id: number;
+  move_number: string;
+  date: string;
+  account_id: number;
+  account_name: string;
+  partner_id: number | null;
+  partner_name: string | null;
+  description: string | null;
+  reference: string | null;
+  journal: string;
+  debit: number;
+  credit: number;
+  balance: number;
+}
+
 // ── Data fetching ──
 
 export async function fetchDashboardData() {
@@ -107,4 +125,16 @@ export async function fetchDashboardData() {
     drinksUsage: (drinksRes.data || []) as DrinksUsage[],
     wrRevenue: (wrRevRes.data || []) as WRRevenue[],
   };
+}
+
+// ── General Ledger (fetched separately to avoid bloating dashboard data) ──
+
+export async function fetchGeneralLedger() {
+  const { data, error } = await supabase
+    .from('gwr_general_ledger')
+    .select('id,entry_id,move_id,move_number,date,account_id,account_name,partner_id,partner_name,description,reference,journal,debit,credit,balance')
+    .order('date', { ascending: true });
+
+  if (error) throw error;
+  return (data || []) as GeneralLedgerEntry[];
 }

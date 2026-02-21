@@ -3,7 +3,7 @@ import type { UserRole } from './auth-context';
 // Which route prefixes each role can access
 const ROUTE_ACCESS: Record<UserRole, string[]> = {
   admin: ['*'],
-  manager: ['/', '/revenue', '/expenses', '/operations/inventory', '/operations/food-cost', '/operations/drinks-cost'],
+  manager: ['/', '/revenue', '/expenses', '/odoo', '/operations/inventory', '/operations/food-cost', '/operations/drinks-cost'],
   staff: ['/operations/inventory', '/operations/food-cost', '/operations/drinks-cost'],
 };
 
@@ -21,9 +21,9 @@ export function canAccessRoute(role: UserRole, pathname: string): boolean {
 export function getVisibleNavIds(role: UserRole): string[] {
   switch (role) {
     case 'admin':
-      return ['overview', 'revenue', 'expenses', 'operations', 'admin'];
+      return ['overview', 'revenue', 'expenses', 'odoo', 'operations', 'admin'];
     case 'manager':
-      return ['overview', 'revenue', 'expenses', 'operations'];
+      return ['overview', 'revenue', 'expenses', 'odoo', 'operations'];
     case 'staff':
       return ['operations'];
     default:
