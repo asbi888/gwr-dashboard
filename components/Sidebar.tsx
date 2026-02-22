@@ -72,6 +72,7 @@ const NAV_ITEMS: NavItem[] = [
     ),
     children: [
       { label: 'Balance Sheet', href: '/odoo/balance-sheet' },
+      { label: 'VAT Report', href: '/odoo/vat-report' },
     ],
   },
   {

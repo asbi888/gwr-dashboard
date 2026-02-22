@@ -173,3 +173,40 @@ export async function fetchBSSnapshot(snapshotDate: string): Promise<BSSnapshotR
   if (error) throw error;
   return (data || []) as BSSnapshotRow[];
 }
+
+// ── VAT Report Snapshots ──
+
+export interface VATSnapshotRow {
+  id: number;
+  snapshot_year: number;
+  row_order: number;
+  level: 'section' | 'item' | 'subitem' | 'total';
+  parent_section: 'OUTPUT' | 'INPUT' | 'VAT_ACCOUNT' | null;
+  line_number: string | null;
+  name: string;
+  percent_value: number | null;
+  net_value: number | null;
+  vat_value: number | null;
+}
+
+export async function fetchVATSnapshotYears(): Promise<number[]> {
+  const { data, error } = await supabase
+    .from('odoo_vat_snapshots')
+    .select('snapshot_year')
+    .order('snapshot_year', { ascending: false });
+
+  if (error) throw error;
+  const unique = [...new Set((data || []).map((r: { snapshot_year: number }) => r.snapshot_year))];
+  return unique;
+}
+
+export async function fetchVATSnapshot(year: number): Promise<VATSnapshotRow[]> {
+  const { data, error } = await supabase
+    .from('odoo_vat_snapshots')
+    .select('id,snapshot_year,row_order,level,parent_section,line_number,name,percent_value,net_value,vat_value')
+    .eq('snapshot_year', year)
+    .order('row_order', { ascending: true });
+
+  if (error) throw error;
+  return (data || []) as VATSnapshotRow[];
+}
