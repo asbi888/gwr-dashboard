@@ -6,6 +6,7 @@ import {
   fetchBSSnapshot,
   type BSSnapshotRow,
 } from '@/lib/supabase';
+import { useAuth } from '@/lib/auth-context';
 import KPICard, { KPICardSkeleton } from '@/components/KPICard';
 import { formatCurrencyFull } from '@/lib/utils';
 
@@ -102,6 +103,7 @@ function SnapshotSection({
 // ── Main page ──
 
 export default function BalanceSheetPage() {
+  const { loading: authLoading } = useAuth();
   const [snapshotDates, setSnapshotDates] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [rows, setRows] = useState<BSSnapshotRow[]>([]);
@@ -113,8 +115,9 @@ export default function BalanceSheetPage() {
     EQUITY: true,
   });
 
-  // Load available snapshot dates
+  // Load available snapshot dates (wait for auth to be ready)
   useEffect(() => {
+    if (authLoading) return;
     fetchBSSnapshotDates()
       .then((dates) => {
         setSnapshotDates(dates);
@@ -124,17 +127,17 @@ export default function BalanceSheetPage() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [authLoading]);
 
   // Load snapshot data when date changes
   useEffect(() => {
-    if (!selectedDate) return;
+    if (!selectedDate || authLoading) return;
     setLoading(true);
     fetchBSSnapshot(selectedDate)
       .then(setRows)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [selectedDate]);
+  }, [selectedDate, authLoading]);
 
   // Derive section data
   const sections = ['ASSETS', 'LIABILITIES', 'EQUITY'] as const;

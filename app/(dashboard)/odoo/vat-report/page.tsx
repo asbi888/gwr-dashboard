@@ -6,6 +6,7 @@ import {
   fetchVATSnapshot,
   type VATSnapshotRow,
 } from '@/lib/supabase';
+import { useAuth } from '@/lib/auth-context';
 import KPICard, { KPICardSkeleton } from '@/components/KPICard';
 import { formatCurrencyFull } from '@/lib/utils';
 
@@ -131,6 +132,7 @@ function VATSection({
 // ── Main page ──
 
 export default function VATReportPage() {
+  const { loading: authLoading } = useAuth();
   const [years, setYears] = useState<number[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(0);
   const [rows, setRows] = useState<VATSnapshotRow[]>([]);
@@ -142,8 +144,9 @@ export default function VATReportPage() {
     VAT_ACCOUNT: true,
   });
 
-  // Load available years
+  // Load available years (wait for auth to be ready)
   useEffect(() => {
+    if (authLoading) return;
     fetchVATSnapshotYears()
       .then((yrs) => {
         setYears(yrs);
@@ -151,11 +154,11 @@ export default function VATReportPage() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [authLoading]);
 
   // Load snapshot when year changes
   useEffect(() => {
-    if (!selectedYear) return;
+    if (!selectedYear || authLoading) return;
     setLoading(true);
     fetchVATSnapshot(selectedYear)
       .then(setRows)
