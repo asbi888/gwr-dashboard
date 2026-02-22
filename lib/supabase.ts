@@ -138,3 +138,38 @@ export async function fetchGeneralLedger() {
   if (error) throw error;
   return (data || []) as GeneralLedgerEntry[];
 }
+
+// ── Balance Sheet Snapshots ──
+
+export interface BSSnapshotRow {
+  id: number;
+  snapshot_date: string;
+  row_order: number;
+  level: 'section' | 'category' | 'subcategory' | 'account';
+  parent_section: 'ASSETS' | 'LIABILITIES' | 'EQUITY' | null;
+  code: string | null;
+  name: string;
+  balance: number;
+}
+
+export async function fetchBSSnapshotDates(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('odoo_bs_snapshots')
+    .select('snapshot_date')
+    .order('snapshot_date', { ascending: false });
+
+  if (error) throw error;
+  const unique = [...new Set((data || []).map((r: { snapshot_date: string }) => r.snapshot_date))];
+  return unique;
+}
+
+export async function fetchBSSnapshot(snapshotDate: string): Promise<BSSnapshotRow[]> {
+  const { data, error } = await supabase
+    .from('odoo_bs_snapshots')
+    .select('id,snapshot_date,row_order,level,parent_section,code,name,balance')
+    .eq('snapshot_date', snapshotDate)
+    .order('row_order', { ascending: true });
+
+  if (error) throw error;
+  return (data || []) as BSSnapshotRow[];
+}
