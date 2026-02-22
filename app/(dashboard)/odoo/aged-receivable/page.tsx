@@ -112,6 +112,22 @@ export default function AgedReceivablePage() {
         </div>
       </div>
 
+      {/* Disclaimer banner */}
+      <div className="animate-fade-in-up opacity-0 delay-150 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6">
+        <div className="flex-shrink-0 mt-0.5">
+          <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86l-8.03 14A1 1 0 003.14 20h17.72a1 1 0 00.87-1.5l-8.03-14a1 1 0 00-1.72 0z" />
+          </svg>
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-amber-800">Balances may appear higher than actual</p>
+          <p className="text-xs text-amber-700 mt-0.5">
+            Some invoices in Odoo were never posted (confirmed), meaning payments received were not matched against them.
+            As a result, outstanding receivable amounts shown here may be overstated. Please refer to Odoo for the confirmed invoice status.
+          </p>
+        </div>
+      </div>
+
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-5 mb-6 text-sm text-red-700">
           Failed to load aged receivable data: {error}
