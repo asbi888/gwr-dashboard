@@ -5,10 +5,14 @@ import PageShell from '@/components/PageShell';
 import KPICard from '@/components/KPICard';
 import RevenueExpenseChart from '@/components/RevenueExpenseChart';
 import FilterBar from '@/components/FilterBar';
+import AIForecastChart from '@/components/ai/AIForecastChart';
+import { useAuth } from '@/lib/auth-context';
 import { computeKPIs, buildMonthlyChart, applyFilters, getUniqueClientNames } from '@/lib/processing';
 import { formatCurrency, formatPercent, formatCurrencyFull, DEFAULT_FILTERS, type DashboardFilters } from '@/lib/utils';
 
 export default function RevenueTrendPage() {
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === 'admin';
   const [filters, setFilters] = useState<DashboardFilters>(DEFAULT_FILTERS);
 
   return (
@@ -84,6 +88,9 @@ export default function RevenueTrendPage() {
             <div className="animate-fade-in-up opacity-0 delay-300">
               <RevenueExpenseChart data={monthlyChart} />
             </div>
+
+            {/* AI Revenue Forecast — admin only */}
+            {isAdmin && <AIForecastChart monthlyData={monthlyChart} />}
 
             {/* Monthly Breakdown Table */}
             <div className="animate-fade-in-up opacity-0 delay-400 mt-6">

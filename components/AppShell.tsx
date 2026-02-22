@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { canAccessRoute, getDefaultRoute } from '@/lib/permissions';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
+import AIChatButton from './ai/AIChatButton';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -48,6 +49,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+      {profile.role === 'admin' && <AIChatButton />}
     </div>
   );
 }

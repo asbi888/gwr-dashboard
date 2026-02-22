@@ -176,3 +176,26 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   from { opacity: 1; transform: translateY(0) scale(1); }
   to { opacity: 0; transform: translateY(10px) scale(0.95); }
 }
+
+/* AI Chat animations */
+@keyframes chatPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(123, 97, 255, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(123, 97, 255, 0); }
+}
+@keyframes chatSlideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes typingDot {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+.ai-chat-pulse {
+  animation: chatPulse 2s ease-in-out infinite;
+}
+.ai-chat-panel {
+  animation: chatSlideUp 0.3s ease-out;
+}
+.ai-typing-dot:nth-child(1) { animation: typingDot 1.4s infinite 0s; }
+.ai-typing-dot:nth-child(2) { animation: typingDot 1.4s infinite 0.2s; }
+.ai-typing-dot:nth-child(3) { animation: typingDot 1.4s infinite 0.4s; }

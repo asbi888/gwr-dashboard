@@ -9,6 +9,8 @@ import InventoryTable from '@/components/InventoryTable';
 import Modal from '@/components/ui/Modal';
 import FoodUsageForm from '@/components/forms/FoodUsageForm';
 import DrinksUsageForm from '@/components/forms/DrinksUsageForm';
+import AIDemandForecast from '@/components/ai/AIDemandForecast';
+import { useAuth } from '@/lib/auth-context';
 import {
   computeInventory,
   buildFoodPurchaseVsUsage,
@@ -25,6 +27,8 @@ const DATE_PRESETS: { value: DatePreset; label: string }[] = [
 ];
 
 export default function OperationsInventoryPage() {
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === 'admin';
   const [showFoodModal, setShowFoodModal] = useState(false);
   const [showDrinksModal, setShowDrinksModal] = useState(false);
   const [datePreset, setDatePreset] = useState<DatePreset>('all_time');
@@ -189,6 +193,9 @@ export default function OperationsInventoryPage() {
                 />
               ))}
             </div>
+
+            {/* AI Demand Intelligence — admin only */}
+            {isAdmin && <AIDemandForecast data={data} />}
 
             {/* Charts: Food Purchase vs Usage + Drinks */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">

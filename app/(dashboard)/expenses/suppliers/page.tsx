@@ -4,11 +4,15 @@ import { useState, useRef, useEffect } from 'react';
 import PageShell from '@/components/PageShell';
 import TopSuppliersTable from '@/components/TopSuppliersTable';
 import ExpenseDetailTable from '@/components/ExpenseDetailTable';
+import AnomalyAlertStack from '@/components/ai/AnomalyAlertStack';
+import { useAuth } from '@/lib/auth-context';
 import { buildTopSuppliers, getUniqueSupplierNames } from '@/lib/processing';
 import { formatCurrency, formatCurrencyFull, resolvePresetToRange, type DatePreset } from '@/lib/utils';
 import { formatTimeAgo } from '@/lib/utils';
 
 export default function ExpensesSuppliersPage() {
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === 'admin';
   const [datePreset, setDatePreset] = useState<DatePreset>('all_time');
   const [dateRange, setDateRange] = useState<{ from: string | null; to: string | null }>({ from: null, to: null });
   const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null);
@@ -83,6 +87,9 @@ export default function ExpensesSuppliersPage() {
 
         return (
           <>
+            {/* AI Anomaly Detection — admin only */}
+            {isAdmin && <AnomalyAlertStack data={data} />}
+
             {/* Custom Filter Bar for Supplier Page */}
             <div className="animate-fade-in-up opacity-0 delay-100 mb-6 relative z-20">
               <div className="bg-white rounded-2xl px-5 py-4 shadow-lg shadow-gray-200/50">

@@ -6,6 +6,8 @@ import PageShell from '@/components/PageShell';
 import KPICard from '@/components/KPICard';
 import RevenueExpenseChart from '@/components/RevenueExpenseChart';
 import FilterBar from '@/components/FilterBar';
+import AIBriefingCard from '@/components/ai/AIBriefingCard';
+import { useAuth } from '@/lib/auth-context';
 import { computeKPIs, buildMonthlyChart, buildTopClients, buildTopSuppliers, applyFilters, getUniqueClientNames, computeInventory } from '@/lib/processing';
 import { formatCurrency, formatPercent, formatCurrencyFull, DEFAULT_FILTERS, type DashboardFilters } from '@/lib/utils';
 
@@ -69,6 +71,8 @@ const QUICK_LINKS = [
 
 export default function OverviewPage() {
   const [filters, setFilters] = useState<DashboardFilters>(DEFAULT_FILTERS);
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === 'admin';
 
   return (
     <PageShell
@@ -98,6 +102,9 @@ export default function OverviewPage() {
               clientNames={clientNames}
               lastRefreshed={lastRefreshed}
             />
+
+            {/* AI Daily Briefing — admin only */}
+            {isAdmin && <AIBriefingCard data={data} />}
 
             {/* Inventory Alert Banner */}
             {criticalItems.length > 0 && (
