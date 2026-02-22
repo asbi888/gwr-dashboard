@@ -72,7 +72,9 @@ const NAV_ITEMS: NavItem[] = [
     ),
     children: [
       { label: 'Balance Sheet', href: '/odoo/balance-sheet' },
+      { label: 'Profit & Loss', href: '/odoo/profit-loss' },
       { label: 'VAT Report', href: '/odoo/vat-report' },
+      { label: 'Aged Receivable', href: '/odoo/aged-receivable' },
     ],
   },
   {

@@ -210,3 +210,74 @@ export async function fetchVATSnapshot(year: number): Promise<VATSnapshotRow[]> 
   if (error) throw error;
   return (data || []) as VATSnapshotRow[];
 }
+
+// ── Profit & Loss Snapshots ──
+
+export interface PLSnapshotRow {
+  id: number;
+  snapshot_year: number;
+  row_order: number;
+  level: 'header' | 'account' | 'subtotal' | 'total';
+  code: string | null;
+  name: string;
+  balance: number;
+}
+
+export async function fetchPLSnapshotYears(): Promise<number[]> {
+  const { data, error } = await supabase
+    .from('odoo_pl_snapshots')
+    .select('snapshot_year')
+    .order('snapshot_year', { ascending: false });
+
+  if (error) throw error;
+  return [...new Set((data || []).map((r: { snapshot_year: number }) => r.snapshot_year))];
+}
+
+export async function fetchPLSnapshot(year: number): Promise<PLSnapshotRow[]> {
+  const { data, error } = await supabase
+    .from('odoo_pl_snapshots')
+    .select('id,snapshot_year,row_order,level,code,name,balance')
+    .eq('snapshot_year', year)
+    .order('row_order', { ascending: true });
+
+  if (error) throw error;
+  return (data || []) as PLSnapshotRow[];
+}
+
+// ── Aged Receivable Snapshots ──
+
+export interface ARSnapshotRow {
+  id: number;
+  snapshot_date: string;
+  row_order: number;
+  partner_name: string;
+  is_total: boolean;
+  at_date: number;
+  bucket_1_30: number;
+  bucket_31_60: number;
+  bucket_61_90: number;
+  bucket_91_120: number;
+  older: number;
+  total: number;
+}
+
+export async function fetchARSnapshotDates(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('odoo_ar_snapshots')
+    .select('snapshot_date')
+    .order('snapshot_date', { ascending: false });
+
+  if (error) throw error;
+  return [...new Set((data || []).map((r: { snapshot_date: string }) => r.snapshot_date))];
+}
+
+export async function fetchARSnapshot(snapshotDate: string): Promise<ARSnapshotRow[]> {
+  const { data, error } = await supabase
+    .from('odoo_ar_snapshots')
+    .select('id,snapshot_date,row_order,partner_name,is_total,at_date,bucket_1_30,bucket_31_60,bucket_61_90,bucket_91_120,older,total')
+    .eq('snapshot_date', snapshotDate)
+    .order('row_order', { ascending: true });
+
+  if (error) throw error;
+  return (data || []) as ARSnapshotRow[];
+}
