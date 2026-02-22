@@ -123,7 +123,8 @@ export default function AgedReceivablePage() {
           <p className="text-sm font-semibold text-amber-800">Balances may appear higher than actual</p>
           <p className="text-xs text-amber-700 mt-0.5">
             Some invoices in Odoo were never posted (confirmed), meaning payments received were not matched against them.
-            As a result, outstanding receivable amounts shown here may be overstated. Please refer to Odoo for the confirmed invoice status.
+            As a result, outstanding receivable amounts shown here may be overstated.
+            To resolve this, please confirm all draft invoices in Odoo so that payments can be properly reconciled.
           </p>
         </div>
       </div>
