@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
 
 function LoginForm() {
-  const { signIn, session, loading: authLoading } = useAuth();
+  const { signIn, user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -17,11 +17,11 @@ function LoginForm() {
 
   // If already logged in, redirect away
   useEffect(() => {
-    if (!authLoading && session) {
+    if (!authLoading && user) {
       const redirectTo = searchParams.get('redirectTo') || '/';
       router.replace(redirectTo);
     }
-  }, [authLoading, session, router, searchParams]);
+  }, [authLoading, user, router, searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -103,7 +103,7 @@ function SnapshotSection({
 // ── Main page ──
 
 export default function BalanceSheetPage() {
-  const { loading: authLoading } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const [snapshotDates, setSnapshotDates] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [rows, setRows] = useState<BSSnapshotRow[]>([]);
@@ -115,9 +115,10 @@ export default function BalanceSheetPage() {
     EQUITY: true,
   });
 
-  // Load available snapshot dates (wait for auth to be ready)
+  // Load available snapshot dates (wait for auth to be fully ready)
+  const profileId = profile?.id;
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || !profileId) return;
     fetchBSSnapshotDates()
       .then((dates) => {
         setSnapshotDates(dates);
@@ -127,17 +128,17 @@ export default function BalanceSheetPage() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [authLoading]);
+  }, [authLoading, profileId]);
 
   // Load snapshot data when date changes
   useEffect(() => {
-    if (!selectedDate || authLoading) return;
+    if (!selectedDate || authLoading || !profileId) return;
     setLoading(true);
     fetchBSSnapshot(selectedDate)
       .then(setRows)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [selectedDate, authLoading]);
+  }, [selectedDate, authLoading, profileId]);
 
   // Derive section data
   const sections = ['ASSETS', 'LIABILITIES', 'EQUITY'] as const;

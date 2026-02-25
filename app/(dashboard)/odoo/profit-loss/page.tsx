@@ -11,15 +11,16 @@ import KPICard, { KPICardSkeleton } from '@/components/KPICard';
 import { formatCurrencyFull } from '@/lib/utils';
 
 export default function ProfitLossPage() {
-  const { loading: authLoading } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const [years, setYears] = useState<number[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(0);
   const [rows, setRows] = useState<PLSnapshotRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const profileId = profile?.id;
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || !profileId) return;
     fetchPLSnapshotYears()
       .then((yrs) => {
         setYears(yrs);
@@ -27,16 +28,16 @@ export default function ProfitLossPage() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [authLoading]);
+  }, [authLoading, profileId]);
 
   useEffect(() => {
-    if (!selectedYear || authLoading) return;
+    if (!selectedYear || authLoading || !profileId) return;
     setLoading(true);
     fetchPLSnapshot(selectedYear)
       .then(setRows)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [selectedYear, authLoading]);
+  }, [selectedYear, authLoading, profileId]);
 
   // Extract key figures
   const revenue = rows.find((r) => r.name === 'Revenue')?.balance ?? 0;

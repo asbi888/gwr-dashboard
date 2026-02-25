@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
+import { useAuth } from './auth-context';
 import {
   fetchDashboardData,
   type Expense,
@@ -39,6 +40,7 @@ const DataContext = createContext<DataContextValue>({
 });
 
 export function DashboardDataProvider({ children }: { children: ReactNode }) {
+  const { profile, loading: authLoading } = useAuth();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,16 +62,19 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Initial load
+  // Initial load — wait for auth to be ready so session is attached to queries
+  const profileId = profile?.id;
   useEffect(() => {
+    if (authLoading || !profileId) return;
     loadData(true);
-  }, [loadData]);
+  }, [loadData, authLoading, profileId]);
 
-  // Auto-refresh every 30 seconds (silent)
+  // Auto-refresh every 30 seconds (silent), only when authenticated
   useEffect(() => {
+    if (authLoading || !profileId) return;
     const interval = setInterval(() => loadData(false), 30_000);
     return () => clearInterval(interval);
-  }, [loadData]);
+  }, [loadData, authLoading, profileId]);
 
   return (
     <DataContext.Provider

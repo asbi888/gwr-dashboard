@@ -11,15 +11,16 @@ import KPICard, { KPICardSkeleton } from '@/components/KPICard';
 import { formatCurrencyFull } from '@/lib/utils';
 
 export default function AgedReceivablePage() {
-  const { loading: authLoading } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const [dates, setDates] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [rows, setRows] = useState<ARSnapshotRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const profileId = profile?.id;
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || !profileId) return;
     fetchARSnapshotDates()
       .then((d) => {
         setDates(d);
@@ -27,16 +28,16 @@ export default function AgedReceivablePage() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [authLoading]);
+  }, [authLoading, profileId]);
 
   useEffect(() => {
-    if (!selectedDate || authLoading) return;
+    if (!selectedDate || authLoading || !profileId) return;
     setLoading(true);
     fetchARSnapshot(selectedDate)
       .then(setRows)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [selectedDate, authLoading]);
+  }, [selectedDate, authLoading, profileId]);
 
   // Separate total row from partner rows
   const totalRow = rows.find((r) => r.is_total);

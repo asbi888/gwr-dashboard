@@ -132,7 +132,7 @@ function VATSection({
 // ── Main page ──
 
 export default function VATReportPage() {
-  const { loading: authLoading } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const [years, setYears] = useState<number[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(0);
   const [rows, setRows] = useState<VATSnapshotRow[]>([]);
@@ -144,9 +144,10 @@ export default function VATReportPage() {
     VAT_ACCOUNT: true,
   });
 
-  // Load available years (wait for auth to be ready)
+  // Load available years (wait for auth to be fully ready)
+  const profileId = profile?.id;
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || !profileId) return;
     fetchVATSnapshotYears()
       .then((yrs) => {
         setYears(yrs);
@@ -154,17 +155,17 @@ export default function VATReportPage() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [authLoading]);
+  }, [authLoading, profileId]);
 
   // Load snapshot when year changes
   useEffect(() => {
-    if (!selectedYear || authLoading) return;
+    if (!selectedYear || authLoading || !profileId) return;
     setLoading(true);
     fetchVATSnapshot(selectedYear)
       .then(setRows)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [selectedYear]);
+  }, [selectedYear, authLoading, profileId]);
 
   // Derive section rows
   const sectionOrder = ['OUTPUT', 'INPUT', 'VAT_ACCOUNT'] as const;

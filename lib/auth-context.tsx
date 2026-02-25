@@ -107,6 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(currentSession);
         await fetchProfile(currentUser);
       } else {
+        // No valid user — clear any stale session cookies to prevent
+        // redirect loops (login → middleware → login)
+        await supabase.auth.signOut();
         setSession(null);
       }
       setLoading(false);
