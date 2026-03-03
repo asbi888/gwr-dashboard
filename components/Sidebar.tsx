@@ -58,6 +58,7 @@ const NAV_ITEMS: NavItem[] = [
     ),
     children: [
       { label: 'By Supplier', href: '/expenses/suppliers' },
+      { label: 'Payroll', href: '/expenses/payroll' },
       { label: 'All Transactions', href: '/expenses/transactions' },
       { label: 'Odoo Export', href: '/expenses/odoo-export' },
     ],
