@@ -11,7 +11,7 @@ import { formatTimeAgo } from '@/lib/utils';
 export default function AllTransactionsPage() {
   const [datePreset, setDatePreset] = useState<DatePreset>('all_time');
   const [dateRange, setDateRange] = useState<{ from: string | null; to: string | null }>({ from: null, to: null });
-  const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null);
+  const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
   const [supplierSearch, setSupplierSearch] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -59,9 +59,9 @@ export default function AllTransactionsPage() {
 
         // Filter by supplier (use supplier_name field, fall back to supplier_key lookup)
         let displayedExpenses = filteredExpenses;
-        if (selectedSupplier) {
+        if (selectedSuppliers.length > 0) {
           displayedExpenses = filteredExpenses.filter(
-            (e) => (e.supplier_name?.trim() || supplierLookup[e.supplier_key]) === selectedSupplier
+            (e) => selectedSuppliers.includes(e.supplier_name?.trim() || supplierLookup[e.supplier_key])
           );
         }
 
@@ -87,7 +87,7 @@ export default function AllTransactionsPage() {
         const filteredSupplierNames = supplierNames.filter((n) =>
           n.toLowerCase().includes(supplierSearch.toLowerCase())
         );
-        const hasActiveFilters = datePreset !== 'all_time' || selectedSupplier !== null;
+        const hasActiveFilters = datePreset !== 'all_time' || selectedSuppliers.length > 0;
 
         return (
           <>
@@ -137,12 +137,12 @@ export default function AllTransactionsPage() {
                     </div>
                   )}
 
-                  {/* Supplier Dropdown */}
+                  {/* Supplier Dropdown (multi-select) */}
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={() => setDropdownOpen(!dropdownOpen)}
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all duration-200 ${
-                        selectedSupplier
+                        selectedSuppliers.length > 0
                           ? 'border-primary bg-primary/5 text-primary'
                           : 'border-gray-200 text-gray-500 hover:border-primary/30'
                       }`}
@@ -150,7 +150,11 @@ export default function AllTransactionsPage() {
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
                       </svg>
-                      {selectedSupplier || 'All Suppliers'}
+                      {selectedSuppliers.length === 0
+                        ? 'All Suppliers'
+                        : selectedSuppliers.length === 1
+                        ? selectedSuppliers[0]
+                        : `${selectedSuppliers.length} Suppliers`}
                       <svg className={`w-3 h-3 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
@@ -158,7 +162,7 @@ export default function AllTransactionsPage() {
 
                     {dropdownOpen && (
                       <div
-                        className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden"
+                        className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden"
                         style={{ animation: 'dropdownIn 0.15s ease-out' }}
                       >
                         <div className="p-2 border-b border-gray-100">
@@ -171,26 +175,44 @@ export default function AllTransactionsPage() {
                             autoFocus
                           />
                         </div>
-                        <div className="max-h-52 overflow-y-auto">
-                          <button
-                            onClick={() => { setSelectedSupplier(null); setDropdownOpen(false); setSupplierSearch(''); }}
-                            className={`w-full text-left px-3 py-2 text-xs transition-colors ${
-                              !selectedSupplier ? 'bg-primary/5 text-primary font-semibold' : 'text-gray-600 hover:bg-gray-50'
-                            }`}
-                          >
-                            All Suppliers
-                          </button>
-                          {filteredSupplierNames.map((name) => (
+                        {selectedSuppliers.length > 0 && (
+                          <div className="px-3 py-1.5 border-b border-gray-100">
                             <button
-                              key={name}
-                              onClick={() => { setSelectedSupplier(name); setDropdownOpen(false); setSupplierSearch(''); }}
-                              className={`w-full text-left px-3 py-2 text-xs transition-colors ${
-                                selectedSupplier === name ? 'bg-primary/5 text-primary font-semibold' : 'text-gray-600 hover:bg-gray-50'
-                              }`}
+                              onClick={() => setSelectedSuppliers([])}
+                              className="text-xs text-accent-red hover:underline"
                             >
-                              {name}
+                              Clear selection ({selectedSuppliers.length})
                             </button>
-                          ))}
+                          </div>
+                        )}
+                        <div className="max-h-52 overflow-y-auto">
+                          {filteredSupplierNames.map((name) => {
+                            const checked = selectedSuppliers.includes(name);
+                            return (
+                              <button
+                                key={name}
+                                onClick={() => {
+                                  setSelectedSuppliers((prev) =>
+                                    checked ? prev.filter((s) => s !== name) : [...prev, name]
+                                  );
+                                }}
+                                className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center gap-2 ${
+                                  checked ? 'bg-primary/5 text-primary font-semibold' : 'text-gray-600 hover:bg-gray-50'
+                                }`}
+                              >
+                                <span className={`w-3.5 h-3.5 rounded border flex-shrink-0 flex items-center justify-center transition-colors ${
+                                  checked ? 'bg-primary border-primary' : 'border-gray-300'
+                                }`}>
+                                  {checked && (
+                                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  )}
+                                </span>
+                                {name}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -200,7 +222,7 @@ export default function AllTransactionsPage() {
                   <div className="flex items-center gap-3 lg:ml-auto">
                     {hasActiveFilters && (
                       <button
-                        onClick={() => { setDatePreset('all_time'); setDateRange({ from: null, to: null }); setSelectedSupplier(null); }}
+                        onClick={() => { setDatePreset('all_time'); setDateRange({ from: null, to: null }); setSelectedSuppliers([]); }}
                         className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-medium text-accent-red hover:bg-red-50 transition-colors"
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
