@@ -1,0 +1,6 @@
+cd C:\Users\lab\Desktop\GWR-ETL\GWR-WebAPP\gwr-dashboard
+python scripts/import_vat_report.py
+
+
+
+C:\Users\lab\Desktop\GWR-ETL\GWR-WebAPP\gwr-dashboard>python scripts/import_balance_sheet.py
